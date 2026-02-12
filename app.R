@@ -10,6 +10,7 @@ library(dplyr)
 library(htmltools)
 
 options(shiny.maxRequestSize = 300 * 1024^2)
+options(shinygadgets.viewer = shiny::browserViewer())
 
 if (file.exists("help.R")) {
   source("help.R", encoding = "UTF-8")
@@ -38,28 +39,6 @@ md5_fichier <- function(chemin) {
 }
 
 horodater <- function() format(Sys.time(), "%Y-%m-%d %H:%M:%S")
-
-commande_navigateur_systeme <- function() {
-  os <- tolower(Sys.info()[["sysname"]])
-  if (identical(os, "windows")) return("start")
-  if (identical(os, "darwin")) return("open")
-  "xdg-open"
-}
-
-ouvrir_explorateur_rainette <- function(res, dfm_aligne, corpus_aligne) {
-  ancien_browser <- getOption("browser")
-  ancien_viewer <- getOption("viewer")
-
-  browser_invalide <- is.null(ancien_browser) || is.function(ancien_browser) || is.language(ancien_browser)
-  if (browser_invalide) {
-    options(browser = commande_navigateur_systeme())
-  }
-
-  options(viewer = NULL)
-  on.exit(options(browser = ancien_browser, viewer = ancien_viewer), add = TRUE)
-
-  rainette_explor(res, dfm_aligne, corpus_aligne)
-}
 
 ajouter_log <- function(rv, texte) {
   rv$logs <- paste(rv$logs, paste0("[", horodater(), "] ", texte), sep = "\n")
@@ -882,18 +861,13 @@ server <- function(input, output, session) {
     req(rv$res, rv$dfm, rv$filtered_corpus)
 
     tryCatch({
-      dn_dfm <- docnames(rv$dfm)
-      dn_cor <- docnames(rv$filtered_corpus)
-      commun <- intersect(dn_dfm, dn_cor)
+      dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
+      validate(need(length(dn) >= 2, "Alignement DFM/corpus impossible (moins de 2 segments communs)."))
 
-      if (length(commun) < 2) {
-        stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
-      }
+      dtm_aligne <- rv$dfm[dn, ]
+      corpus_aligne <- rv$filtered_corpus[dn]
 
-      dfm_aligne <- rv$dfm[commun, ]
-      corpus_aligne <- rv$filtered_corpus[commun]
-
-      ouvrir_explorateur_rainette(rv$res, dfm_aligne, corpus_aligne)
+      rainette::rainette_explor(rv$res, dtm_aligne, corpus_aligne)
 
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
