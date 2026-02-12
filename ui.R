@@ -140,6 +140,13 @@ ui <- fluidPage(
         id = "onglets_principaux",
 
         tabPanel(
+          "CHD",
+          tags$h3("Classification hiérarchique descendante"),
+          uiOutput("ui_chd_statut"),
+          plotOutput("plot_chd", height = "760px")
+        ),
+
+        tabPanel(
           "Analyse",
           tags$h3("Statut"),
           textOutput("statut"),

@@ -349,6 +349,20 @@ server <- function(input, output, session) {
     tags$p(paste0("AFC calculée sur ", ncl, " classes et ", nt, " termes (table Classes × Termes)."))
   })
 
+  output$ui_chd_statut <- renderUI({
+    if (is.null(rv$res)) {
+      return(tags$p("CHD non disponible. Lance une analyse."))
+    }
+
+    if (identical(rv$res_type, "double")) {
+      return(tags$p("CHD disponible (classification double rainette2)."))
+    }
+
+    nb_classes <- NA_integer_
+    if (!is.null(rv$clusters)) nb_classes <- length(rv$clusters)
+    tags$p(paste0("CHD disponible (classification simple rainette) - classes détectées : ", nb_classes, "."))
+  })
+
   observeEvent(input$lancer, {
     rv$logs <- ""
     rv$statut <- "Vérification du fichier..."
@@ -851,6 +865,22 @@ server <- function(input, output, session) {
       return(invisible(NULL))
     }
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
+  })
+
+  output$plot_chd <- renderPlot({
+    if (is.null(rv$res)) {
+      plot.new()
+      text(0.5, 0.5, "CHD non disponible. Lance une analyse.", cex = 1.1)
+      return(invisible(NULL))
+    }
+
+    tryCatch({
+      rainette_plot(rv$res)
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.55, "Impossible d'afficher la CHD dans l'application.", cex = 1.0)
+      text(0.5, 0.45, paste0("Erreur : ", e$message), cex = 0.9)
+    })
   })
 
   output$plot_afc <- renderPlot({
