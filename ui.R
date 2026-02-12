@@ -128,7 +128,6 @@ ui <- fluidPage(
       tags$hr(),
 
       actionButton("lancer", "Lancer l'analyse"),
-      actionButton("explor", "rainette_explor"),
 
       tags$hr(),
 
@@ -189,22 +188,6 @@ ui <- fluidPage(
 
           tags$h4("Valeurs propres"),
           tableOutput("table_afc_eig")
-        ),
-
-        tabPanel(
-          "Exploration CHD",
-          tags$h3("Exploration des classes"),
-          tags$p("Clique sur “rainette_explor” après une analyse pour charger cette vue."),
-          selectInput("explor_classe", "Classe à explorer", choices = character(0)),
-          tags$h4("Dendrogramme (CHD)"),
-          plotOutput("plot_chd_dendrogramme", height = "520px"),
-          tags$pre(style = "white-space: pre-wrap; color: #a00;", textOutput("explor_erreur")),
-          tags$h4("Nuage de mots (classe sélectionnée)"),
-          plotOutput("plot_chd_wordcloud", height = "520px"),
-          tags$h4("Cooccurrences (classe sélectionnée)"),
-          plotOutput("plot_chd_cooc", height = "620px"),
-          tags$h4("Concordancier"),
-          uiOutput("ui_concordancier")
         ),
 
         tabPanel(
