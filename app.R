@@ -394,7 +394,8 @@ server <- function(input, output, session) {
       return(invisible(FALSE))
     }
 
-    dn_dfm <- intersect(dn_dfm, rownames(dv))
+    dn_corpus <- docnames(rv$filtered_corpus)
+    dn_dfm <- intersect(dn_dfm, dn_corpus)
     if (length(dn_dfm) < 2) {
       if (isTRUE(afficher_notifications)) {
         showNotification("Alignement DFM/corpus impossible (moins de 2 segments communs).", type = "error", duration = 6)
@@ -1017,7 +1018,7 @@ server <- function(input, output, session) {
 
     dv <- docvars(rv$filtered_corpus)
     dn_dfm <- docnames(rv$dfm)
-    dn_dfm <- intersect(dn_dfm, rownames(dv))
+    dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
     classes_seg <- as.integer(dv[dn_dfm, "Classes"])
@@ -1053,7 +1054,7 @@ server <- function(input, output, session) {
 
     dv <- docvars(rv$filtered_corpus)
     dn_dfm <- docnames(rv$dfm)
-    dn_dfm <- intersect(dn_dfm, rownames(dv))
+    dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
     classes_seg <- as.integer(dv[dn_dfm, "Classes"])
