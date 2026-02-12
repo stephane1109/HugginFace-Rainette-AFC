@@ -306,6 +306,43 @@ tracer_dendrogramme_rainette_explor <- function(expl_obj) {
   FALSE
 }
 
+lancer_rainette_explor_dans_navigateur <- function(res, dfm_obj = NULL, corpus_obj = NULL) {
+  if (!exists("rainette_explor", mode = "function")) {
+    return(list(ok = FALSE, message = "Fonction rainette_explor introuvable."))
+  }
+
+  viewer_fun <- tryCatch(shiny::browserViewer(), error = function(e) NULL)
+
+  essais <- list(
+    list(res = res, dtm = dfm_obj, corpus = corpus_obj, viewer = viewer_fun),
+    list(res = res, dtm = dfm_obj, corpus = corpus_obj, launch.browser = TRUE),
+    list(res = res, dtm = dfm_obj, corpus = corpus_obj),
+    list(res = res, dtm = dfm_obj, viewer = viewer_fun),
+    list(res = res, dtm = dfm_obj),
+    list(res = res)
+  )
+
+  dernier_message <- "Aucun appel rainette_explor n'a abouti."
+
+  for (args in essais) {
+    args <- args[!vapply(args, is.null, logical(1))]
+
+    err <- tryCatch({
+      do.call(rainette_explor, args)
+      NULL
+    }, error = function(e) e)
+
+    if (is.null(err)) {
+      return(list(ok = TRUE, message = "rainette_explor ouvert dans le navigateur."))
+    }
+
+    dernier_message <- err$message
+  }
+
+  list(ok = FALSE, message = dernier_message)
+}
+
+
 construire_graphe_adjacence <- function(mat) {
   if ("graph_from_adjacency_matrix" %in% getNamespaceExports("igraph")) {
     igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = TRUE, diag = FALSE)
@@ -947,26 +984,41 @@ server <- function(input, output, session) {
   observeEvent(input$explor, {
     tryCatch({
       ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
+      req(isTRUE(ok_exploration), rv$res, rv$dfm)
 
-      if (isTRUE(ok_exploration)) {
-        classe_active <- isolate(input$explor_classe)
-        showModal(modalDialog(
-          title = "Exploration CHD (rainette_explor)",
-          tags$p(
-            style = "margin-bottom: 8px;",
-            paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
-          ),
-          tabsetPanel(
-            tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
-            tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
-            tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
-            tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
-          ),
-          size = "l",
-          easyClose = TRUE,
-          footer = modalButton("Fermer")
-        ))
+      lancement <- lancer_rainette_explor_dans_navigateur(rv$res, rv$dfm, rv$filtered_corpus)
+      if (isTRUE(lancement$ok)) {
+        ajouter_log(rv, "rainette_explor lancé dans une vue Shiny externe (navigateur).")
+        showNotification(
+          "rainette_explor a été lancé dans le navigateur (vue Shiny séparée).",
+          type = "message", duration = 7
+        )
+        return(invisible(NULL))
       }
+
+      ajouter_log(rv, paste0("rainette_explor indisponible en mode externe : ", lancement$message))
+
+      classe_active <- isolate(input$explor_classe)
+      showModal(modalDialog(
+        title = "Exploration CHD (fallback local)",
+        tags$p(
+          style = "margin-bottom: 8px;",
+          paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
+        ),
+        tags$p(
+          style = "color: #a00; margin-top: 0;",
+          paste0("Impossible d'ouvrir le vrai rainette_explor dans une vue Shiny séparée : ", lancement$message)
+        ),
+        tabsetPanel(
+          tabPanel("Fallback graphique", plotOutput("plot_rainette_explor_modal", height = "700px")),
+          tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
+          tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
+          tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
+        ),
+        size = "l",
+        easyClose = TRUE,
+        footer = modalButton("Fermer")
+      ))
 
     }, error = function(e) {
       ajouter_log(rv, paste0("Exploration CHD : ", e$message))
@@ -1173,22 +1225,7 @@ server <- function(input, output, session) {
     par(mar = c(4, 4, 3, 1))
 
     plot_ok <- FALSE
-    dernier_message <- "Fonction rainette_explor indisponible."
-
-    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
-    if (!is.null(expl)) {
-      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) {
-        dernier_message <<- e$message
-        FALSE
-      })
-
-      if (isTRUE(ok_expl)) {
-        plot_ok <- TRUE
-      }
-    }
-
-    if (!plot_ok && exists("rainette_plot", mode = "function")) {
-      dernier_message <- "Fallback vers rainette_plot en cours."
+    dernier_message <- "Fonction rainette_plot indisponible pour le fallback local."
 
       essais <- list(
         list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
@@ -1218,8 +1255,8 @@ server <- function(input, output, session) {
 
     if (!plot_ok) {
       plot.new()
-      text(0.5, 0.56, "Vue rainette_explor non disponible dans ce runtime.", cex = 1.05)
-      text(0.5, 0.45, "Utilise les autres onglets (Dendrogramme, Nuage, Cooccurrences, Concordancier).", cex = 0.95)
+      text(0.5, 0.56, "Fallback local indisponible.", cex = 1.05)
+      text(0.5, 0.45, "Le vrai rainette_explor doit être lancé dans une vue Shiny séparée.", cex = 0.95)
       text(0.5, 0.34, paste0("Détail : ", dernier_message), cex = 0.85, col = "#555555")
     }
   })
