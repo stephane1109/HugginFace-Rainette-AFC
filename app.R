@@ -39,6 +39,28 @@ md5_fichier <- function(chemin) {
 
 horodater <- function() format(Sys.time(), "%Y-%m-%d %H:%M:%S")
 
+commande_navigateur_systeme <- function() {
+  os <- tolower(Sys.info()[["sysname"]])
+  if (identical(os, "windows")) return("start")
+  if (identical(os, "darwin")) return("open")
+  "xdg-open"
+}
+
+ouvrir_explorateur_rainette <- function(res, dfm_aligne, corpus_aligne) {
+  ancien_browser <- getOption("browser")
+  ancien_viewer <- getOption("viewer")
+
+  browser_invalide <- is.null(ancien_browser) || is.function(ancien_browser) || is.language(ancien_browser)
+  if (browser_invalide) {
+    options(browser = commande_navigateur_systeme())
+  }
+
+  options(viewer = NULL)
+  on.exit(options(browser = ancien_browser, viewer = ancien_viewer), add = TRUE)
+
+  rainette_explor(res, dfm_aligne, corpus_aligne)
+}
+
 ajouter_log <- function(rv, texte) {
   rv$logs <- paste(rv$logs, paste0("[", horodater(), "] ", texte), sep = "\n")
 }
@@ -871,7 +893,7 @@ server <- function(input, output, session) {
       dfm_aligne <- rv$dfm[commun, ]
       corpus_aligne <- rv$filtered_corpus[commun]
 
-      rainette_explor(rv$res, dfm_aligne, corpus_aligne)
+      ouvrir_explorateur_rainette(rv$res, dfm_aligne, corpus_aligne)
 
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
