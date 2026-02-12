@@ -5,6 +5,12 @@ library(htmltools)
 
 ui <- fluidPage(
   tags$head(
+    tags$script(HTML("\
+      Shiny.addCustomMessageHandler('ouvrirFenetreRainette', function(message) {\
+        if (!message || !message.url) return;\
+        window.open(message.url, '_blank', 'noopener,noreferrer');\
+      });\
+    ")),
     tags$style(HTML("
       #shiny-modal .modal-dialog {
         width: 96vw !important;
