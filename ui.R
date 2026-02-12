@@ -121,7 +121,11 @@ ui <- fluidPage(
 
       tags$hr(),
 
-      actionButton("lancer", "Lancer l'analyse"),
+      tags$div(
+        style = "display: flex; gap: 8px; flex-wrap: wrap; align-items: center;",
+        actionButton("lancer", "Lancer l'analyse"),
+        actionButton("explor", "Explor rainette", class = "btn-primary")
+      ),
 
       tags$hr(),
 
@@ -132,16 +136,6 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         id = "onglets_principaux",
-
-        tabPanel(
-          "CHD",
-          tags$h3("Classification hiérarchique descendante"),
-          uiOutput("ui_chd_statut"),
-          actionButton("explor", "Ouvrir l'explorateur Rainette", class = "btn-primary"),
-          tags$br(),
-          tags$br(),
-          plotOutput("plot_chd", height = "760px")
-        ),
 
         tabPanel(
           "Analyse",

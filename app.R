@@ -858,84 +858,32 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$explor, {
-    req(rv$res, rv$dfm, rv$filtered_corpus)
-
     tryCatch({
-      ancien_viewer <- getOption("shinygadgets.viewer")
-      ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
-      on.exit({
-        options(shinygadgets.viewer = ancien_viewer)
-        options(shinygadgets.defaultViewer = ancien_default_viewer)
-      }, add = TRUE)
+      req(rv$html_file)
 
-      viewer_popup <- function(url) {
-        if (is.null(url) || !nzchar(url)) {
-          showNotification("URL explorateur invalide.", type = "error", duration = 8)
-          return(invisible(NULL))
-        }
-
-        showModal(modalDialog(
-          title = "Explorateur Rainette",
-          size = "l",
-          easyClose = TRUE,
-          footer = tagList(
-            tags$a("Ouvrir dans un nouvel onglet", href = url, target = "_blank", class = "btn btn-primary"),
-            modalButton("Fermer")
-          ),
-          tags$iframe(
-            src = url,
-            style = "width: 100%; height: 80vh; border: 0;"
-          )
-        ))
-
-        invisible(NULL)
+      if (!file.exists(rv$html_file)) {
+        stop("Fichier explorateur introuvable. Relance l'analyse.")
       }
 
-      options(
-        shinygadgets.viewer = viewer_popup,
-        shinygadgets.defaultViewer = viewer_popup
-      )
-
-      dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
-      if (length(dn) < 2) {
-        stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
+      if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+        shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
       }
 
-      dtm_aligne <- rv$dfm[dn, ]
-      corpus_aligne <- rv$filtered_corpus[dn]
-      textes_alignes <- as.character(quanteda::texts(corpus_aligne))
+      url_explor <- paste0("/", rv$exports_prefix, "/", basename(rv$html_file))
 
-      appel_ok <- FALSE
-
-      essais <- list(
-        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
-        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, corpus = corpus_aligne),
-        function() rainette::rainette_explor(rv$res, dtm_aligne, textes_alignes)
-      )
-
-      for (f in essais) {
-        essai <- tryCatch({
-          f()
-          TRUE
-        }, error = function(e) {
-          msg <- conditionMessage(e)
-          ajouter_log(rv, paste0("Explorateur (tentative) : ", msg))
-          FALSE
-        })
-
-        if (isTRUE(essai)) {
-          appel_ok <- TRUE
-          break
-        }
-      }
-
-      if (!appel_ok) {
-        stop(
-          "Impossible d'ouvrir l'explorateur Rainette avec cette version du package. ",
-          "Consulte le journal pour le détail des tentatives."
+      showModal(modalDialog(
+        title = "Explorateur Rainette",
+        size = "l",
+        easyClose = TRUE,
+        footer = tagList(
+          tags$a("Ouvrir dans un nouvel onglet", href = url_explor, target = "_blank", class = "btn btn-primary"),
+          modalButton("Fermer")
+        ),
+        tags$iframe(
+          src = url_explor,
+          style = "width: 100%; height: 80vh; border: 0;"
         )
-      }
-
+      ))
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
       ajouter_log(rv, msg)
