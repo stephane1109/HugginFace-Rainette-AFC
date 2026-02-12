@@ -923,6 +923,7 @@ server <- function(input, output, session) {
           max_p = input$max_p,
           textes_indexation = textes_index_ok,
           spacy_tokens_df = rv$spacy_tokens_df,
+          explor_assets = explor_assets,
           avancer = avancer,
           rv = rv
         )
@@ -967,8 +968,6 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$explor, {
-    req(rv$res, rv$dfm, rv$filtered_corpus)
-
     tryCatch({
       ancien_viewer <- getOption("shinygadgets.viewer")
       ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
@@ -1005,9 +1004,8 @@ server <- function(input, output, session) {
         shinygadgets.defaultViewer = viewer_popup
       )
 
-      dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
-      if (length(dn) < 2) {
-        stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
+      if (!file.exists(rv$html_file)) {
+        stop("Fichier explorateur introuvable. Relance l'analyse.")
       }
 
       dtm_aligne <- rv$dfm[dn, ]
@@ -1046,8 +1044,7 @@ server <- function(input, output, session) {
           "Impossible d'ouvrir l'UI native rainette_explor avec cette version/configuration. ",
           if (length(erreurs) > 0) paste0("Dernière erreur : ", tail(erreurs, 1)) else ""
         )
-      }
-
+      ))
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
       ajouter_log(rv, msg)
