@@ -154,21 +154,6 @@ verifier_dfm_avant_rainette <- function(dfm_obj, input) {
 }
 
 
-aligner_dfm_corpus_pour_explor <- function(dfm_obj, corpus_obj) {
-  dn_dfm <- as.character(docnames(dfm_obj))
-  dn_cor <- as.character(docnames(corpus_obj))
-
-  commun <- intersect(dn_dfm, dn_cor)
-
-  if (length(commun) < 2) {
-    stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
-  }
-
-  dfm_aligne <- dfm_obj[commun, ]
-  corpus_aligne <- corpus_obj[commun]
-
-  list(dfm = dfm_aligne, corpus = corpus_aligne)
-}
 
 executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, retirer_stopwords, lower_input, rv) {
   script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
@@ -875,13 +860,18 @@ server <- function(input, output, session) {
     req(rv$res, rv$dfm, rv$filtered_corpus)
 
     tryCatch({
-      al <- aligner_dfm_corpus_pour_explor(rv$dfm, rv$filtered_corpus)
+      dn_dfm <- docnames(rv$dfm)
+      dn_cor <- docnames(rv$filtered_corpus)
+      commun <- intersect(dn_dfm, dn_cor)
 
-      if (!is.null(rv$res_type) && identical(rv$res_type, "double")) {
-        rainette2_explor(rv$res, al$dfm, al$corpus)
-      } else {
-        rainette_explor(rv$res, al$dfm, al$corpus)
+      if (length(commun) < 2) {
+        stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
       }
+
+      dfm_aligne <- rv$dfm[commun, ]
+      corpus_aligne <- rv$filtered_corpus[commun]
+
+      rainette_explor(rv$res, dfm_aligne, corpus_aligne)
 
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
