@@ -324,6 +324,58 @@ server <- function(input, output, session) {
     tags$p(paste0("AFC calculée sur ", ncl, " classes et ", nt, " termes (table Classes × Termes)."))
   })
 
+  actualiser_exploration <- function(afficher_notifications = TRUE) {
+    if (is.null(rv$res) || is.null(rv$dfm) || is.null(rv$filtered_corpus) || is.null(rv$textes_indexation)) {
+      if (isTRUE(afficher_notifications)) {
+        showNotification("Aucune analyse disponible. Lance d'abord une analyse, puis relance l'exploration.", type = "error", duration = 6)
+      }
+      return(invisible(FALSE))
+    }
+
+    dv <- docvars(rv$filtered_corpus)
+    if (!("Classes" %in% names(dv))) {
+      if (isTRUE(afficher_notifications)) {
+        showNotification("Aucune variable 'Classes' détectée dans le corpus. Relance une analyse.", type = "error", duration = 6)
+      }
+      return(invisible(FALSE))
+    }
+
+    dn_dfm <- docnames(rv$dfm)
+    if (is.null(dn_dfm) || length(dn_dfm) == 0) {
+      if (isTRUE(afficher_notifications)) {
+        showNotification("Impossible de récupérer les docnames du DFM.", type = "error", duration = 6)
+      }
+      return(invisible(FALSE))
+    }
+
+    dn_dfm <- intersect(dn_dfm, rownames(dv))
+    if (length(dn_dfm) < 2) {
+      if (isTRUE(afficher_notifications)) {
+        showNotification("Alignement DFM/corpus impossible (moins de 2 segments communs).", type = "error", duration = 6)
+      }
+      return(invisible(FALSE))
+    }
+
+    classes_seg <- as.integer(dv[dn_dfm, "Classes"])
+    classes_uniques <- sort(unique(stats::na.omit(classes_seg)))
+    if (length(classes_uniques) == 0) {
+      if (isTRUE(afficher_notifications)) {
+        showNotification("Aucune classe exploitable (toutes NA).", type = "error", duration = 6)
+      }
+      return(invisible(FALSE))
+    }
+
+    classe_courante <- isolate(input$explor_classe)
+    classe_select <- classes_uniques[1]
+    if (!is.null(classe_courante) && suppressWarnings(as.integer(classe_courante)) %in% classes_uniques) {
+      classe_select <- suppressWarnings(as.integer(classe_courante))
+    }
+
+    updateSelectInput(session, "explor_classe", choices = classes_uniques, selected = classe_select)
+    updateTabsetPanel(session, "onglets_principaux", selected = "Exploration CHD")
+    invisible(TRUE)
+  }
+
   observeEvent(input$lancer, {
     rv$logs <- ""
     rv$statut <- "Vérification du fichier..."
@@ -803,6 +855,7 @@ server <- function(input, output, session) {
 
         rv$statut <- "Analyse terminée."
         rv$progression <- 100
+        actualiser_exploration(afficher_notifications = FALSE)
         ajouter_log(rv, "Analyse terminée.")
         showNotification("Analyse terminée.", type = "message", duration = 5)
 
@@ -816,62 +869,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$explor, {
     tryCatch({
-
-      if (is.null(rv$res) || is.null(rv$dfm) || is.null(rv$filtered_corpus) || is.null(rv$textes_indexation)) {
-        showNotification("Aucune analyse disponible. Lance d'abord une analyse, puis relance l'exploration.", type = "error", duration = 6)
-        return(invisible(NULL))
-      }
-
-      dv <- docvars(rv$filtered_corpus)
-      if (!("Classes" %in% names(dv))) {
-        showNotification("Aucune variable 'Classes' détectée dans le corpus. Relance une analyse.", type = "error", duration = 6)
-        return(invisible(NULL))
-      }
-
-      # Alignement sécurisé sur les docnames du DFM
-      dn_dfm <- docnames(rv$dfm)
-      if (is.null(dn_dfm) || length(dn_dfm) == 0) {
-        showNotification("Impossible de récupérer les docnames du DFM.", type = "error", duration = 6)
-        return(invisible(NULL))
-      }
-      if (!all(dn_dfm %in% rownames(dv))) {
-        # On ne bloque pas : on garde l'intersection
-        dn_dfm <- intersect(dn_dfm, rownames(dv))
-      }
-      if (length(dn_dfm) < 2) {
-        showNotification("Alignement DFM/corpus impossible (moins de 2 segments communs).", type = "error", duration = 6)
-        return(invisible(NULL))
-      }
-
-      classes_seg <- as.integer(dv[dn_dfm, "Classes"])
-      classes_uniques <- sort(unique(stats::na.omit(classes_seg)))
-      if (length(classes_uniques) == 0) {
-        showNotification("Aucune classe exploitable (toutes NA).", type = "error", duration = 6)
-        return(invisible(NULL))
-      }
-
-      showModal(modalDialog(
-        title = "Exploration CHD (dendrogramme, nuage de mots, cooccurrences)",
-        size = "l",
-        easyClose = TRUE,
-        footer = modalButton("Fermer"),
-
-        tags$p("Cette fenêtre s'affiche directement dans l'application, y compris sur serveur distant."),
-
-        tags$h4("Dendrogramme (CHD)"),
-        plotOutput("plot_chd_dendrogramme", height = "520px"),
-        tags$pre(style = "white-space: pre-wrap; color: #a00;", textOutput("explor_erreur")),
-
-        tags$hr(),
-
-        selectInput("explor_classe", "Classe à explorer", choices = classes_uniques, selected = classes_uniques[1]),
-
-        tags$h4("Nuage de mots (classe sélectionnée)"),
-        plotOutput("plot_chd_wordcloud", height = "520px"),
-
-        tags$h4("Cooccurrences (classe sélectionnée)"),
-        plotOutput("plot_chd_cooc", height = "620px")
-      ))
+      actualiser_exploration(afficher_notifications = TRUE)
 
     }, error = function(e) {
       ajouter_log(rv, paste0("Exploration CHD : ", e$message))
@@ -881,6 +879,21 @@ server <- function(input, output, session) {
 
   output$explor_erreur <- renderText({
     ""
+  })
+
+  output$ui_concordancier <- renderUI({
+    if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
+      return(tags$p("Concordancier non disponible. Lance une analyse pour le générer."))
+    }
+
+    if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+      shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+    }
+
+    tags$iframe(
+      src = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)),
+      style = "width: 100%; height: 780px; border: 1px solid #ddd; background: #fff;"
+    )
   })
 
   output$plot_chd_dendrogramme <- renderPlot({
