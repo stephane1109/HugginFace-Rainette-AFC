@@ -43,6 +43,12 @@ ajouter_log <- function(rv, texte) {
   rv$logs <- paste(rv$logs, paste0("[", horodater(), "] ", texte), sep = "\n")
 }
 
+normaliser_classes <- function(x) {
+  y <- trimws(as.character(x))
+  y[y == "" | is.na(y)] <- NA_character_
+  y
+}
+
 construire_segment_source <- function(corpus_segmente) {
   dv <- docvars(corpus_segmente)
 
@@ -370,7 +376,11 @@ server <- function(input, output, session) {
     tags$p(paste0("AFC calculée sur ", ncl, " classes et ", nt, " termes (table Classes × Termes)."))
   })
 
-  actualiser_exploration <- function(afficher_notifications = TRUE) {
+  actualiser_exploration <- function(afficher_notifications = TRUE, forcer_onglet = FALSE) {
+    if (isTRUE(forcer_onglet)) {
+      updateTabsetPanel(session, "onglets_principaux", selected = "Exploration CHD")
+    }
+
     if (is.null(rv$res) || is.null(rv$dfm) || is.null(rv$filtered_corpus) || is.null(rv$textes_indexation)) {
       if (isTRUE(afficher_notifications)) {
         showNotification("Aucune analyse disponible. Lance d'abord une analyse, puis relance l'exploration.", type = "error", duration = 6)
@@ -403,7 +413,7 @@ server <- function(input, output, session) {
       return(invisible(FALSE))
     }
 
-    classes_seg <- as.integer(dv[dn_dfm, "Classes"])
+    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
     classes_uniques <- sort(unique(stats::na.omit(classes_seg)))
     if (length(classes_uniques) == 0) {
       if (isTRUE(afficher_notifications)) {
@@ -414,8 +424,9 @@ server <- function(input, output, session) {
 
     classe_courante <- isolate(input$explor_classe)
     classe_select <- classes_uniques[1]
-    if (!is.null(classe_courante) && suppressWarnings(as.integer(classe_courante)) %in% classes_uniques) {
-      classe_select <- suppressWarnings(as.integer(classe_courante))
+    classe_courante <- as.character(classe_courante)
+    if (!is.null(classe_courante) && classe_courante %in% classes_uniques) {
+      classe_select <- classe_courante
     }
 
     updateSelectInput(session, "explor_classe", choices = classes_uniques, selected = classe_select)
@@ -916,7 +927,7 @@ server <- function(input, output, session) {
 
   observeEvent(input$explor, {
     tryCatch({
-      actualiser_exploration(afficher_notifications = TRUE)
+      actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
 
     }, error = function(e) {
       ajouter_log(rv, paste0("Exploration CHD : ", e$message))
@@ -1021,8 +1032,8 @@ server <- function(input, output, session) {
     dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
-    classes_seg <- as.integer(dv[dn_dfm, "Classes"])
-    idx <- which(!is.na(classes_seg) & classes_seg == as.integer(cl))
+    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
+    idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
     validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour un nuage de mots."))
 
     dfm_cl <- rv$dfm[dn_dfm[idx], ]
@@ -1057,8 +1068,8 @@ server <- function(input, output, session) {
     dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
-    classes_seg <- as.integer(dv[dn_dfm, "Classes"])
-    idx <- which(!is.na(classes_seg) & classes_seg == as.integer(cl))
+    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
+    idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
     validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour les cooccurrences."))
 
     textes_cl <- rv$textes_indexation[dn_dfm[idx]]
