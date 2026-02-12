@@ -862,12 +862,44 @@ server <- function(input, output, session) {
 
     tryCatch({
       dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
-      validate(need(length(dn) >= 2, "Alignement DFM/corpus impossible (moins de 2 segments communs)."))
+      if (length(dn) < 2) {
+        stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
+      }
 
       dtm_aligne <- rv$dfm[dn, ]
       corpus_aligne <- rv$filtered_corpus[dn]
+      textes_alignes <- as.character(quanteda::texts(corpus_aligne))
 
-      rainette::rainette_explor(rv$res, dtm_aligne, corpus_aligne)
+      appel_ok <- FALSE
+
+      essais <- list(
+        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
+        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, corpus = corpus_aligne),
+        function() rainette::rainette_explor(rv$res, dtm_aligne, textes_alignes)
+      )
+
+      for (f in essais) {
+        essai <- tryCatch({
+          f()
+          TRUE
+        }, error = function(e) {
+          msg <- conditionMessage(e)
+          ajouter_log(rv, paste0("Explorateur (tentative) : ", msg))
+          FALSE
+        })
+
+        if (isTRUE(essai)) {
+          appel_ok <- TRUE
+          break
+        }
+      }
+
+      if (!appel_ok) {
+        stop(
+          "Impossible d'ouvrir l'explorateur Rainette avec cette version du package. ",
+          "Consulte le journal pour le détail des tentatives."
+        )
+      }
 
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
