@@ -946,15 +946,30 @@ server <- function(input, output, session) {
     tryCatch({
       ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
 
-      if (isTRUE(ok_exploration) && !is.null(rv$html_file) && file.exists(rv$html_file)) {
-        if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-          shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
-        }
+      if (isTRUE(ok_exploration)) {
+        if (!is.null(rv$html_file) && file.exists(rv$html_file)) {
+          if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+            shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+          }
 
-        session$sendCustomMessage(
-          "ouvrirFenetreRainette",
-          list(url = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)))
-        )
+          showModal(modalDialog(
+            title = "Exploration CHD (rainette_explor)",
+            tags$iframe(
+              src = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)),
+              style = "width: 100%; height: 78vh; border: 1px solid #ddd; background: #fff;"
+            ),
+            size = "l",
+            easyClose = TRUE,
+            footer = modalButton("Fermer")
+          ))
+        } else {
+          showModal(modalDialog(
+            title = "Exploration CHD",
+            tags$p("Concordancier non disponible. Lance une analyse pour générer les résultats rainette_explor."),
+            easyClose = TRUE,
+            footer = modalButton("Fermer")
+          ))
+        }
       }
 
     }, error = function(e) {
