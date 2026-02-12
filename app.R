@@ -1173,9 +1173,23 @@ server <- function(input, output, session) {
     par(mar = c(4, 4, 3, 1))
 
     plot_ok <- FALSE
-    dernier_message <- "Fonction rainette_plot indisponible."
+    dernier_message <- "Fonction rainette_explor indisponible."
 
-    if (exists("rainette_plot", mode = "function")) {
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+    if (!is.null(expl)) {
+      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) {
+        dernier_message <<- e$message
+        FALSE
+      })
+
+      if (isTRUE(ok_expl)) {
+        plot_ok <- TRUE
+      }
+    }
+
+    if (!plot_ok && exists("rainette_plot", mode = "function")) {
+      dernier_message <- "Fallback vers rainette_plot en cours."
+
       essais <- list(
         list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
         list(rv$res, rv$dfm, rv$filtered_corpus),
