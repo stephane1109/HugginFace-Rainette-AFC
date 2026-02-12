@@ -259,52 +259,6 @@ obtenir_objet_dendrogramme <- function(res) {
 }
 
 
-construire_rainette_explor <- function(res, dfm_obj = NULL, corpus_obj = NULL) {
-  if (!exists("rainette_explor", mode = "function")) return(NULL)
-
-  essais <- list(
-    list(res = res, dtm = dfm_obj, corpus = corpus_obj),
-    list(res, dfm_obj, corpus_obj),
-    list(res),
-    list(res = res),
-    list(x = res),
-    list(dfm_obj, res),
-    list(dtm = dfm_obj, res = res),
-    list(dfm = dfm_obj, res = res),
-    list(x = res, dtm = dfm_obj)
-  )
-
-  for (args in essais) {
-    if (any(vapply(args, is.null, logical(1)))) next
-    out <- tryCatch(do.call(rainette_explor, args), error = function(e) NULL)
-    if (!is.null(out)) return(out)
-  }
-
-  NULL
-}
-
-tracer_dendrogramme_rainette_explor <- function(expl_obj) {
-  if (is.null(expl_obj)) return(FALSE)
-
-  essais <- list(
-    function() plot(expl_obj),
-    function() plot(expl_obj, type = "tree"),
-    function() plot(expl_obj, what = "tree"),
-    function() plot(expl_obj, display = "tree"),
-    function() print(expl_obj)
-  )
-
-  for (fn in essais) {
-    ok <- tryCatch({
-      fn()
-      TRUE
-    }, error = function(e) FALSE)
-
-    if (isTRUE(ok)) return(TRUE)
-  }
-
-  FALSE
-}
 
 construire_graphe_adjacence <- function(mat) {
   if ("graph_from_adjacency_matrix" %in% getNamespaceExports("igraph")) {
@@ -947,32 +901,18 @@ server <- function(input, output, session) {
   observeEvent(input$explor, {
     tryCatch({
       ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
+      req(isTRUE(ok_exploration), rv$res, rv$dfm, rv$filtered_corpus)
 
-      if (isTRUE(ok_exploration)) {
-        classe_active <- isolate(input$explor_classe)
-        showModal(modalDialog(
-          title = "Exploration CHD (rainette_explor)",
-          tags$p(
-            style = "margin-bottom: 8px;",
-            paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
-          ),
-          tabsetPanel(
-            tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
-            tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
-            tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
-            tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
-          ),
-          size = "l",
-          easyClose = TRUE,
-          footer = modalButton("Fermer")
-        ))
-      }
+      rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+      ajouter_log(rv, "rainette_explor lancé avec la signature documentée : rainette_explor(res, dtm, corpus).")
+      showNotification("rainette_explor lancé (vue Shiny dédiée).", type = "message", duration = 7)
 
     }, error = function(e) {
-      ajouter_log(rv, paste0("Exploration CHD : ", e$message))
+      ajouter_log(rv, paste0("Échec rainette_explor(res, dtm, corpus) : ", e$message))
       showNotification(paste0("Exploration CHD : ", e$message), type = "error", duration = 8)
     })
   })
+
 
   output$explor_erreur <- renderText({
     ""
@@ -1002,14 +942,7 @@ server <- function(input, output, session) {
     on.exit(par(op), add = TRUE)
     par(mar = c(5, 4, 4, 2) + 0.1)
 
-    # 1) Priorité au workflow rainette_explor (README rainette)
-    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
-    if (!is.null(expl)) {
-      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
-      if (isTRUE(ok_expl)) return(invisible(NULL))
-    }
-
-    # 2) Fallback : objet dendrogramme/hclust accessible dans l'objet résultat
+    # 1) Objet dendrogramme/hclust accessible dans l'objet résultat
     d <- obtenir_objet_dendrogramme(rv$res)
     if (!is.null(d)) {
       if (inherits(d, "dendrogram")) {
@@ -1024,7 +957,7 @@ server <- function(input, output, session) {
       return(invisible(NULL))
     }
 
-    # 3) Dernier recours : objets convertibles
+    # 2) Dernier recours : objets convertibles
     plot_ok <- FALSE
     dernier_message <- ""
 
@@ -1165,65 +1098,6 @@ server <- function(input, output, session) {
     )
   })
 
-  output$plot_rainette_explor_modal <- renderPlot({
-    req(rv$res, rv$dfm)
-
-    op <- par(no.readonly = TRUE)
-    on.exit(par(op), add = TRUE)
-    par(mar = c(4, 4, 3, 1))
-
-    plot_ok <- FALSE
-    dernier_message <- "Fonction rainette_explor indisponible."
-
-    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
-    if (!is.null(expl)) {
-      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) {
-        dernier_message <<- e$message
-        FALSE
-      })
-
-      if (isTRUE(ok_expl)) {
-        plot_ok <- TRUE
-      }
-    }
-
-    if (!plot_ok && exists("rainette_plot", mode = "function")) {
-      dernier_message <- "Fallback vers rainette_plot en cours."
-
-      essais <- list(
-        list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
-        list(rv$res, rv$dfm, rv$filtered_corpus),
-        list(res = rv$res, dtm = rv$dfm),
-        list(rv$res, rv$dfm),
-        list(rv$res),
-        list(res = rv$res)
-      )
-
-      for (args in essais) {
-        if (any(vapply(args, is.null, logical(1)))) next
-
-        err <- tryCatch({
-          do.call(rainette_plot, args)
-          NULL
-        }, error = function(e) e)
-
-        if (is.null(err)) {
-          plot_ok <- TRUE
-          break
-        }
-
-        dernier_message <- err$message
-      }
-    }
-
-    if (!plot_ok) {
-      plot.new()
-      text(0.5, 0.56, "Vue rainette_explor non disponible dans ce runtime.", cex = 1.05)
-      text(0.5, 0.45, "Utilise les autres onglets (Dendrogramme, Nuage, Cooccurrences, Concordancier).", cex = 0.95)
-      text(0.5, 0.34, paste0("Détail : ", dernier_message), cex = 0.85, col = "#555555")
-    }
-  })
-
   output$ui_concordancier_modal <- renderUI({
     if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
       return(tags$p("Concordancier non disponible. Lance une analyse pour le générer."))
@@ -1245,12 +1119,6 @@ server <- function(input, output, session) {
     op <- par(no.readonly = TRUE)
     on.exit(par(op), add = TRUE)
     par(mar = c(5, 4, 4, 2) + 0.1)
-
-    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
-    if (!is.null(expl)) {
-      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
-      if (isTRUE(ok_expl)) return(invisible(NULL))
-    }
 
     d <- obtenir_objet_dendrogramme(rv$res)
     if (!is.null(d)) {
