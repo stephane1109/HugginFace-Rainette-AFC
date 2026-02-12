@@ -861,6 +861,41 @@ server <- function(input, output, session) {
     req(rv$res, rv$dfm, rv$filtered_corpus)
 
     tryCatch({
+      ancien_viewer <- getOption("shinygadgets.viewer")
+      ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
+      on.exit({
+        options(shinygadgets.viewer = ancien_viewer)
+        options(shinygadgets.defaultViewer = ancien_default_viewer)
+      }, add = TRUE)
+
+      viewer_popup <- function(url) {
+        if (is.null(url) || !nzchar(url)) {
+          showNotification("URL explorateur invalide.", type = "error", duration = 8)
+          return(invisible(NULL))
+        }
+
+        showModal(modalDialog(
+          title = "Explorateur Rainette",
+          size = "l",
+          easyClose = TRUE,
+          footer = tagList(
+            tags$a("Ouvrir dans un nouvel onglet", href = url, target = "_blank", class = "btn btn-primary"),
+            modalButton("Fermer")
+          ),
+          tags$iframe(
+            src = url,
+            style = "width: 100%; height: 80vh; border: 0;"
+          )
+        ))
+
+        invisible(NULL)
+      }
+
+      options(
+        shinygadgets.viewer = viewer_popup,
+        shinygadgets.defaultViewer = viewer_popup
+      )
+
       dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
       if (length(dn) < 2) {
         stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")
