@@ -274,13 +274,24 @@ construire_rainette_explor <- function(res, dfm_obj = NULL, corpus_obj = NULL) {
     list(x = res, dtm = dfm_obj)
   )
 
+  dernier_message <- "Aucun appel compatible à rainette_explor() n'a réussi."
+
   for (args in essais) {
     if (any(vapply(args, is.null, logical(1)))) next
-    out <- tryCatch(do.call(rainette_explor, args), error = function(e) NULL)
+
+    err <- NULL
+    out <- tryCatch(do.call(rainette_explor, args), error = function(e) {
+      err <<- e
+      NULL
+    })
+
     if (!is.null(out)) return(out)
+    if (!is.null(err) && !is.null(err$message) && nzchar(err$message)) {
+      dernier_message <- err$message
+    }
   }
 
-  NULL
+  structure(NULL, rainette_explor_error = dernier_message)
 }
 
 tracer_dendrogramme_rainette_explor <- function(expl_obj) {
@@ -957,7 +968,7 @@ server <- function(input, output, session) {
             paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
           ),
           tabsetPanel(
-            tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
+            tabPanel("rainette_explor", uiOutput("ui_rainette_explor_modal")),
             tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
             tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
             tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
@@ -1165,49 +1176,36 @@ server <- function(input, output, session) {
     )
   })
 
-  output$plot_rainette_explor_modal <- renderPlot({
+  output$ui_rainette_explor_modal <- renderUI({
     req(rv$res, rv$dfm)
 
-    op <- par(no.readonly = TRUE)
-    on.exit(par(op), add = TRUE)
-    par(mar = c(4, 4, 3, 1))
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+    err_msg <- attr(expl, "rainette_explor_error")
 
-    plot_ok <- FALSE
-    dernier_message <- "Fonction rainette_plot indisponible."
-
-    if (exists("rainette_plot", mode = "function")) {
-      essais <- list(
-        list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
-        list(rv$res, rv$dfm, rv$filtered_corpus),
-        list(res = rv$res, dtm = rv$dfm),
-        list(rv$res, rv$dfm),
-        list(rv$res),
-        list(res = rv$res)
-      )
-
-      for (args in essais) {
-        if (any(vapply(args, is.null, logical(1)))) next
-
-        err <- tryCatch({
-          do.call(rainette_plot, args)
-          NULL
-        }, error = function(e) e)
-
-        if (is.null(err)) {
-          plot_ok <- TRUE
-          break
-        }
-
-        dernier_message <- err$message
-      }
+    if (is.null(expl)) {
+      return(tags$div(
+        tags$p("La vue originale rainette_explor n'a pas pu être instanciée dans ce runtime."),
+        tags$p(paste0("Détail technique : ", ifelse(is.null(err_msg) || !nzchar(err_msg), "non disponible", err_msg))),
+        tags$p("Sur certains déploiements Shiny (ex: HF), le gadget rainette_explor peut ne pas être embarquable dans une autre app Shiny.")
+      ))
     }
 
-    if (!plot_ok) {
-      plot.new()
-      text(0.5, 0.56, "Vue rainette_explor non disponible dans ce runtime.", cex = 1.05)
-      text(0.5, 0.45, "Utilise les autres onglets (Dendrogramme, Nuage, Cooccurrences, Concordancier).", cex = 0.95)
-      text(0.5, 0.34, paste0("Détail : ", dernier_message), cex = 0.85, col = "#555555")
+    if (inherits(expl, "shiny.appobj")) {
+      return(tags$div(
+        tags$p("rainette_explor a bien renvoyé un gadget Shiny complet (fenêtre originale)."),
+        tags$p("Ce type d'objet ne peut pas être injecté directement comme sous-composant dans cette app hébergée."),
+        tags$p("Les onglets Nuage / Cooccurrences / Concordancier restent disponibles dans cette fenêtre.")
+      ))
     }
+
+    if (inherits(expl, "htmlwidget")) return(htmltools::tagList(expl))
+    if (inherits(expl, "shiny.tag") || inherits(expl, "shiny.tag.list")) return(expl)
+    if (is.list(expl) && !is.null(expl$ui) && (inherits(expl$ui, "shiny.tag") || inherits(expl$ui, "shiny.tag.list"))) return(expl$ui)
+
+    tags$div(
+      tags$p("rainette_explor a renvoyé un objet non affichable directement dans l'UI."),
+      tags$p(paste0("Classe renvoyée : ", paste(class(expl), collapse = ", ")))
+    )
   })
 
   output$ui_concordancier_modal <- renderUI({
