@@ -259,10 +259,12 @@ obtenir_objet_dendrogramme <- function(res) {
 }
 
 
-construire_rainette_explor <- function(res, dfm_obj = NULL) {
+construire_rainette_explor <- function(res, dfm_obj = NULL, corpus_obj = NULL) {
   if (!exists("rainette_explor", mode = "function")) return(NULL)
 
   essais <- list(
+    list(res = res, dtm = dfm_obj, corpus = corpus_obj),
+    list(res, dfm_obj, corpus_obj),
     list(res),
     list(res = res),
     list(x = res),
@@ -955,7 +957,8 @@ server <- function(input, output, session) {
             paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
           ),
           tabsetPanel(
-            tabPanel("Dendrogramme", plotOutput("plot_chd_dendrogramme_modal", height = "520px")),
+            tabPanel("rainette_explor", uiOutput("ui_rainette_explor_modal")),
+            tabPanel("Dendrogramme", plotOutput("plot_chd_dendrogramme_modal", height = "360px")),
             tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
             tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
             tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
@@ -1001,7 +1004,7 @@ server <- function(input, output, session) {
     par(mar = c(5, 4, 4, 2) + 0.1)
 
     # 1) Priorité au workflow rainette_explor (README rainette)
-    expl <- construire_rainette_explor(rv$res, rv$dfm)
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
     if (!is.null(expl)) {
       ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
       if (isTRUE(ok_expl)) return(invisible(NULL))
@@ -1163,6 +1166,29 @@ server <- function(input, output, session) {
     )
   })
 
+  output$ui_rainette_explor_modal <- renderUI({
+    req(rv$res, rv$dfm, rv$filtered_corpus)
+
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+    if (is.null(expl)) {
+      return(tags$p("Affichage rainette_explor natif indisponible avec cette version de l'objet. Utilise les onglets Dendrogramme / Nuage / Cooccurrences / Concordancier."))
+    }
+
+    if (inherits(expl, "htmlwidget")) {
+      return(htmltools::tagList(expl))
+    }
+
+    if (inherits(expl, "shiny.tag") || inherits(expl, "shiny.tag.list")) {
+      return(expl)
+    }
+
+    if (is.list(expl) && !is.null(expl$ui) && (inherits(expl$ui, "shiny.tag") || inherits(expl$ui, "shiny.tag.list"))) {
+      return(expl$ui)
+    }
+
+    tags$p("Objet rainette_explor généré mais non intégrable directement en UI. Utilise les autres onglets de la fenêtre.")
+  })
+
   output$ui_concordancier_modal <- renderUI({
     if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
       return(tags$p("Concordancier non disponible. Lance une analyse pour le générer."))
@@ -1185,7 +1211,7 @@ server <- function(input, output, session) {
     on.exit(par(op), add = TRUE)
     par(mar = c(5, 4, 4, 2) + 0.1)
 
-    expl <- construire_rainette_explor(rv$res, rv$dfm)
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
     if (!is.null(expl)) {
       ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
       if (isTRUE(ok_expl)) return(invisible(NULL))
