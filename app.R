@@ -49,6 +49,23 @@ normaliser_classes <- function(x) {
   y
 }
 
+extraire_classes_alignees <- function(corpus_obj, doc_ids, nom_colonne = "Classes") {
+  dv <- docvars(corpus_obj)
+  if (!(nom_colonne %in% names(dv))) return(rep(NA_character_, length(doc_ids)))
+
+  doc_ids <- as.character(doc_ids)
+  dn_corpus <- as.character(docnames(corpus_obj))
+  idx <- match(doc_ids, dn_corpus)
+
+  out <- rep(NA_character_, length(doc_ids))
+  ok <- !is.na(idx)
+  if (any(ok)) {
+    out[ok] <- as.character(dv[[nom_colonne]][idx[ok]])
+  }
+
+  normaliser_classes(out)
+}
+
 construire_segment_source <- function(corpus_segmente) {
   dv <- docvars(corpus_segmente)
 
@@ -413,7 +430,7 @@ server <- function(input, output, session) {
       return(invisible(FALSE))
     }
 
-    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
+    classes_seg <- extraire_classes_alignees(rv$filtered_corpus, dn_dfm, "Classes")
     classes_uniques <- sort(unique(stats::na.omit(classes_seg)))
     if (length(classes_uniques) == 0) {
       if (isTRUE(afficher_notifications)) {
@@ -1032,7 +1049,7 @@ server <- function(input, output, session) {
     dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
-    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
+    classes_seg <- extraire_classes_alignees(rv$filtered_corpus, dn_dfm, "Classes")
     idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
     validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour un nuage de mots."))
 
@@ -1068,7 +1085,7 @@ server <- function(input, output, session) {
     dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
     validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
 
-    classes_seg <- normaliser_classes(dv[dn_dfm, "Classes"])
+    classes_seg <- extraire_classes_alignees(rv$filtered_corpus, dn_dfm, "Classes")
     idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
     validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour les cooccurrences."))
 
