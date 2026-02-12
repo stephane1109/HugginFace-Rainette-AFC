@@ -143,6 +143,9 @@ ui <- fluidPage(
           "CHD",
           tags$h3("Classification hiérarchique descendante"),
           uiOutput("ui_chd_statut"),
+          actionButton("explor", "Ouvrir l'explorateur Rainette", class = "btn-primary"),
+          tags$br(),
+          tags$br(),
           plotOutput("plot_chd", height = "760px")
         ),
 
