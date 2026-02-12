@@ -869,7 +869,25 @@ server <- function(input, output, session) {
       }, add = TRUE)
 
       viewer_popup <- function(url) {
-        session$sendCustomMessage("ouvrirFenetreRainette", list(url = url))
+        if (is.null(url) || !nzchar(url)) {
+          showNotification("URL explorateur invalide.", type = "error", duration = 8)
+          return(invisible(NULL))
+        }
+
+        showModal(modalDialog(
+          title = "Explorateur Rainette",
+          size = "l",
+          easyClose = TRUE,
+          footer = tagList(
+            tags$a("Ouvrir dans un nouvel onglet", href = url, target = "_blank", class = "btn btn-primary"),
+            modalButton("Fermer")
+          ),
+          tags$iframe(
+            src = url,
+            style = "width: 100%; height: 80vh; border: 0;"
+          )
+        ))
+
         invisible(NULL)
       }
 
