@@ -944,7 +944,18 @@ server <- function(input, output, session) {
 
   observeEvent(input$explor, {
     tryCatch({
-      actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
+      ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
+
+      if (isTRUE(ok_exploration) && !is.null(rv$html_file) && file.exists(rv$html_file)) {
+        if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+          shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+        }
+
+        session$sendCustomMessage(
+          "ouvrirFenetreRainette",
+          list(url = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)))
+        )
+      }
 
     }, error = function(e) {
       ajouter_log(rv, paste0("Exploration CHD : ", e$message))
