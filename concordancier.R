@@ -113,8 +113,10 @@ generer_concordancier_html <- function(
   max_p,
   textes_indexation,
   spacy_tokens_df,
+  explor_assets = NULL,
   avancer = NULL,
-  rv = NULL
+  rv = NULL,
+  ...
 ) {
   if (!is.null(rv)) ajouter_log(rv, "Concordancier : génération HTML (filtré + surlignage Unicode).")
 
@@ -124,7 +126,42 @@ generer_concordancier_html <- function(
   writeLines("<html><head><meta charset='utf-8'/>", con)
   writeLines("<style>body{font-family:Arial,sans-serif;} span.highlight{background-color:yellow;}</style>", con)
   writeLines("</head><body>", con)
-  writeLines("<h1>Segments par Classe (filtrés sur présence de termes significatifs)</h1>", con)
+
+  writeLines("<h1>Explorateur Rainette</h1>", con)
+
+  writeLines("<h2>1) CHD</h2>", con)
+  if (!is.null(explor_assets) && !is.null(explor_assets$chd) && nzchar(explor_assets$chd)) {
+    writeLines(paste0("<p><img src='", explor_assets$chd, "' style='max-width:100%;height:auto;border:1px solid #ddd;'/></p>"), con)
+  } else {
+    writeLines("<p><em>CHD non disponible dans l'export.</em></p>", con)
+  }
+
+  writeLines("<h2>2) Nuages de mots</h2>", con)
+  if (!is.null(explor_assets) && !is.null(explor_assets$wordclouds) && nrow(explor_assets$wordclouds) > 0) {
+    for (i_wc in seq_len(nrow(explor_assets$wordclouds))) {
+      cl_wc <- as.character(explor_assets$wordclouds$classe[i_wc])
+      src_wc <- as.character(explor_assets$wordclouds$src[i_wc])
+      writeLines(paste0("<h3>Classe ", cl_wc, "</h3>"), con)
+      writeLines(paste0("<p><img src='", src_wc, "' style='max-width:100%;height:auto;border:1px solid #ddd;'/></p>"), con)
+    }
+  } else {
+    writeLines("<p><em>Nuages de mots non disponibles dans l'export.</em></p>", con)
+  }
+
+  writeLines("<h2>3) Cooccurrences</h2>", con)
+  if (!is.null(explor_assets) && !is.null(explor_assets$coocs) && nrow(explor_assets$coocs) > 0) {
+    for (i_co in seq_len(nrow(explor_assets$coocs))) {
+      cl_co <- as.character(explor_assets$coocs$classe[i_co])
+      src_co <- as.character(explor_assets$coocs$src[i_co])
+      writeLines(paste0("<h3>Classe ", cl_co, "</h3>"), con)
+      writeLines(paste0("<p><img src='", src_co, "' style='max-width:100%;height:auto;border:1px solid #ddd;'/></p>"), con)
+    }
+  } else {
+    writeLines("<p><em>Cooccurrences non disponibles dans l'export.</em></p>", con)
+  }
+
+  writeLines("<h2>4) Concordancier</h2>", con)
+  writeLines("<h3>Segments par classe (filtrés sur présence de termes significatifs)</h3>", con)
 
   noms_classes <- names(segments_by_class)
   n_classes <- length(noms_classes)

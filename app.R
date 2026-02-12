@@ -816,7 +816,107 @@ server <- function(input, output, session) {
         textes_index_ok <- rv$textes_indexation[docnames(dfm_ok)]
         names(textes_index_ok) <- docnames(dfm_ok)
 
-        generer_concordancier_html(
+        explor_dir <- file.path(rv$export_dir, "explor")
+        dir.create(explor_dir, showWarnings = FALSE, recursive = TRUE)
+
+        explor_assets <- list(
+          chd = NULL,
+          wordclouds = data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE),
+          coocs = data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
+        )
+
+        chd_png <- file.path(explor_dir, "chd.png")
+        try({
+          png(chd_png, width = 2000, height = 1500, res = 180)
+          rainette_plot(rv$res)
+          dev.off()
+          if (file.exists(chd_png)) explor_assets$chd <- file.path("explor", basename(chd_png))
+        }, silent = TRUE)
+
+        classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
+
+        for (cl in classes_uniques) {
+          df_stats_cl <- subset(res_stats_df, Classe == cl & p <= input$max_p)
+          if (nrow(df_stats_cl) > 0) {
+            df_stats_cl <- df_stats_cl[order(-df_stats_cl$chi2), , drop = FALSE]
+            df_stats_cl <- head(df_stats_cl, max(5, as.integer(input$top_n)))
+
+            wc_png <- file.path(explor_dir, paste0("wordcloud_classe_", cl, ".png"))
+            try({
+              png(wc_png, width = 1800, height = 1300, res = 180)
+              suppressWarnings(wordcloud(
+                words = df_stats_cl$Terme,
+                freq = pmax(df_stats_cl$chi2, 0.0001),
+                min.freq = 0,
+                max.words = nrow(df_stats_cl),
+                random.order = FALSE,
+                rot.per = 0.15,
+                colors = brewer.pal(8, "Dark2")
+              ))
+              dev.off()
+              if (file.exists(wc_png)) {
+                explor_assets$wordclouds <- rbind(
+                  explor_assets$wordclouds,
+                  data.frame(classe = as.character(cl), src = file.path("explor", basename(wc_png)), stringsAsFactors = FALSE)
+                )
+              }
+            }, silent = TRUE)
+          }
+
+          tok_cl <- tok_ok[docvars(filtered_corpus_ok)$Classes == cl]
+          cooc_png <- file.path(explor_dir, paste0("cooc_classe_", cl, ".png"))
+
+          try({
+            if (length(tok_cl) > 1) {
+              dfm_cl <- dfm(tok_cl)
+              if (nfeat(dfm_cl) > 1) {
+                top_feat <- max(5, as.integer(input$top_feat))
+                freq_cl <- Matrix::colSums(dfm_cl)
+                feat_sel <- names(sort(freq_cl, decreasing = TRUE))[seq_len(min(top_feat, length(freq_cl)))]
+                fcm_cl <- fcm(tok_cl, context = "window", window = max(1, as.integer(input$window_cooc)), tri = FALSE)
+                fcm_cl <- fcm_select(fcm_cl, pattern = feat_sel)
+
+                mat <- as.matrix(fcm_cl)
+                diag(mat) <- 0
+                mat[mat < 0] <- 0
+
+                if (sum(mat) > 0) {
+                  g <- construire_graphe_adjacence(mat)
+                  g <- igraph::delete_vertices(g, igraph::degree(g) == 0)
+
+                  if (igraph::vcount(g) > 1) {
+                    png(cooc_png, width = 1800, height = 1300, res = 180)
+                    w <- igraph::E(g)$weight
+                    if (length(w) == 0) {
+                      w_plot <- numeric(0)
+                    } else if (max(w) == min(w)) {
+                      w_plot <- rep(2.5, length(w))
+                    } else {
+                      w_plot <- 1 + (w - min(w)) * (6 - 1) / (max(w) - min(w))
+                    }
+                    plot(
+                      g,
+                      vertex.label = igraph::V(g)$name,
+                      vertex.size = 14,
+                      vertex.label.cex = 0.85,
+                      edge.width = w_plot,
+                      layout = igraph::layout_with_fr(g)
+                    )
+                    dev.off()
+                    if (file.exists(cooc_png)) {
+                      explor_assets$coocs <- rbind(
+                        explor_assets$coocs,
+                        data.frame(classe = as.character(cl), src = file.path("explor", basename(cooc_png)), stringsAsFactors = FALSE)
+                      )
+                    }
+                  }
+                }
+              }
+            }
+          }, silent = TRUE)
+        }
+
+        args_concordancier <- list(
           chemin_sortie = html_file,
           segments_by_class = segments_by_class,
           res_stats_df = res_stats_df,
@@ -826,6 +926,15 @@ server <- function(input, output, session) {
           avancer = avancer,
           rv = rv
         )
+
+        fml <- tryCatch(names(formals(generer_concordancier_html)), error = function(e) character(0))
+        if ("explor_assets" %in% fml) {
+          args_concordancier$explor_assets <- explor_assets
+        } else {
+          ajouter_log(rv, "Concordancier : argument explor_assets indisponible (version de fonction plus ancienne).")
+        }
+
+        do.call(generer_concordancier_html, args_concordancier)
 
         rv$html_file <- html_file
 
@@ -875,7 +984,7 @@ server <- function(input, output, session) {
         }
 
         showModal(modalDialog(
-          title = "Explorateur Rainette",
+          title = "Explorateur Rainette (UI native)",
           size = "l",
           easyClose = TRUE,
           footer = tagList(
@@ -906,10 +1015,12 @@ server <- function(input, output, session) {
       textes_alignes <- as.character(quanteda::texts(corpus_aligne))
 
       appel_ok <- FALSE
+      erreurs <- character(0)
 
       essais <- list(
-        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
         function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, corpus = corpus_aligne),
+        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
+        function() rainette::rainette_explor(rv$res, dtm_aligne, corpus_aligne),
         function() rainette::rainette_explor(rv$res, dtm_aligne, textes_alignes)
       )
 
@@ -919,7 +1030,8 @@ server <- function(input, output, session) {
           TRUE
         }, error = function(e) {
           msg <- conditionMessage(e)
-          ajouter_log(rv, paste0("Explorateur (tentative) : ", msg))
+          erreurs <<- c(erreurs, msg)
+          ajouter_log(rv, paste0("Explorateur rainette_explor (tentative) : ", msg))
           FALSE
         })
 
@@ -931,8 +1043,8 @@ server <- function(input, output, session) {
 
       if (!appel_ok) {
         stop(
-          "Impossible d'ouvrir l'explorateur Rainette avec cette version du package. ",
-          "Consulte le journal pour le détail des tentatives."
+          "Impossible d'ouvrir l'UI native rainette_explor avec cette version/configuration. ",
+          if (length(erreurs) > 0) paste0("Dernière erreur : ", tail(erreurs, 1)) else ""
         )
       }
 
