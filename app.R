@@ -284,6 +284,7 @@ server <- function(input, output, session) {
     zip_file = NULL,
 
     res = NULL,
+    res_explor = NULL,
     dfm = NULL,
     filtered_corpus = NULL,
     res_stats_df = NULL,
@@ -435,6 +436,7 @@ server <- function(input, output, session) {
     rv$zip_file <- NULL
 
     rv$res <- NULL
+    rv$res_explor <- NULL
     rv$res_type <- "simple"
 
     ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
@@ -589,6 +591,7 @@ server <- function(input, output, session) {
 
         groupes <- NULL
         res_final <- NULL
+        res_explor <- NULL
 
         if (type_classif == "simple") {
 
@@ -607,6 +610,7 @@ server <- function(input, output, session) {
 
           groupes <- res$group
           res_final <- res
+          res_explor <- res
           rv$max_n_groups <- max(res$group, na.rm = TRUE)
 
         } else {
@@ -626,6 +630,8 @@ server <- function(input, output, session) {
           if (isTRUE(input$double_complete_na)) groupes <- rainette2_complete_groups(dfm_obj, groupes)
 
           res_final <- res_d
+          res_explor <- res1
+          ajouter_log(rv, "Mode double : rainette_explor utilisera la première classification (res1).")
           rv$max_n_groups <- input$max_k_double
         }
 
@@ -641,8 +647,9 @@ server <- function(input, output, session) {
 
         rv$clusters <- sort(unique(docvars(filtered_corpus_ok)$Classes))
         rv$res <- res_final
+        rv$res_explor <- res_explor
         rv$dfm <- dfm_ok
-        rv$filtered_corpus <- filtered_corpus
+        rv$filtered_corpus <- filtered_corpus_ok
         rv$res_stats_df <- NULL
 
         avancer(0.58, "NER (si activé)")
@@ -901,9 +908,9 @@ server <- function(input, output, session) {
   observeEvent(input$explor, {
     tryCatch({
       ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
-      req(isTRUE(ok_exploration), rv$res, rv$dfm, rv$filtered_corpus)
+      req(isTRUE(ok_exploration), rv$res_explor, rv$dfm, rv$filtered_corpus)
 
-      rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+      rainette_explor(rv$res_explor, rv$dfm, rv$filtered_corpus)
       ajouter_log(rv, "rainette_explor lancé avec la signature documentée : rainette_explor(res, dtm, corpus).")
       showNotification("rainette_explor lancé (vue Shiny dédiée).", type = "message", duration = 7)
 
