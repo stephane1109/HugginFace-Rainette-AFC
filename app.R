@@ -1179,7 +1179,6 @@ server <- function(input, output, session) {
     plot_ok <- FALSE
     dernier_message <- "Fonction rainette_plot indisponible pour le fallback local."
 
-    if (exists("rainette_plot", mode = "function")) {
       essais <- list(
         list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
         list(rv$res, rv$dfm, rv$filtered_corpus),
