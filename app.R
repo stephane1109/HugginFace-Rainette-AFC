@@ -259,10 +259,12 @@ obtenir_objet_dendrogramme <- function(res) {
 }
 
 
-construire_rainette_explor <- function(res, dfm_obj = NULL) {
+construire_rainette_explor <- function(res, dfm_obj = NULL, corpus_obj = NULL) {
   if (!exists("rainette_explor", mode = "function")) return(NULL)
 
   essais <- list(
+    list(res = res, dtm = dfm_obj, corpus = corpus_obj),
+    list(res, dfm_obj, corpus_obj),
     list(res),
     list(res = res),
     list(x = res),
@@ -946,15 +948,25 @@ server <- function(input, output, session) {
     tryCatch({
       ok_exploration <- actualiser_exploration(afficher_notifications = TRUE, forcer_onglet = TRUE)
 
-      if (isTRUE(ok_exploration) && !is.null(rv$html_file) && file.exists(rv$html_file)) {
-        if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-          shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
-        }
-
-        session$sendCustomMessage(
-          "ouvrirFenetreRainette",
-          list(url = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)))
-        )
+      if (isTRUE(ok_exploration)) {
+        classe_active <- isolate(input$explor_classe)
+        showModal(modalDialog(
+          title = "Exploration CHD (rainette_explor)",
+          tags$p(
+            style = "margin-bottom: 8px;",
+            paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
+          ),
+          tabsetPanel(
+            tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
+            tabPanel("Dendrogramme", plotOutput("plot_chd_dendrogramme_modal", height = "360px")),
+            tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
+            tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
+            tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
+          ),
+          size = "l",
+          easyClose = TRUE,
+          footer = modalButton("Fermer")
+        ))
       }
 
     }, error = function(e) {
@@ -992,7 +1004,7 @@ server <- function(input, output, session) {
     par(mar = c(5, 4, 4, 2) + 0.1)
 
     # 1) Priorité au workflow rainette_explor (README rainette)
-    expl <- construire_rainette_explor(rv$res, rv$dfm)
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
     if (!is.null(expl)) {
       ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
       if (isTRUE(ok_expl)) return(invisible(NULL))
@@ -1137,6 +1149,199 @@ server <- function(input, output, session) {
       g2 <- igraph::subgraph.edges(g, E(g)[ord[seq_len(max_edges)]], delete.vertices = TRUE)
     } else {
       # Fallback ancien : on garde les arêtes puis on induit un sous-graphe
+      e_keep <- E(g)[ord[seq_len(max_edges)]]
+      v_keep <- unique(as.vector(ends(g, e_keep)))
+      g2 <- induced_subgraph(g, v_keep)
+    }
+
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(1, 1, 3, 1))
+
+    plot(
+      g2,
+      vertex.size = 10,
+      vertex.label.cex = 0.9,
+      main = paste0("Cooccurrences (classe ", cl, ") | window=", window_cooc, " | top_feat=", top_feat)
+    )
+  })
+
+  output$plot_rainette_explor_modal <- renderPlot({
+    req(rv$res, rv$dfm)
+
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(4, 4, 3, 1))
+
+    plot_ok <- FALSE
+    dernier_message <- "Fonction rainette_plot indisponible."
+
+    if (exists("rainette_plot", mode = "function")) {
+      essais <- list(
+        list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
+        list(rv$res, rv$dfm, rv$filtered_corpus),
+        list(res = rv$res, dtm = rv$dfm),
+        list(rv$res, rv$dfm),
+        list(rv$res),
+        list(res = rv$res)
+      )
+
+      for (args in essais) {
+        if (any(vapply(args, is.null, logical(1)))) next
+
+        err <- tryCatch({
+          do.call(rainette_plot, args)
+          NULL
+        }, error = function(e) e)
+
+        if (is.null(err)) {
+          plot_ok <- TRUE
+          break
+        }
+
+        dernier_message <- err$message
+      }
+    }
+
+    if (!plot_ok) {
+      plot.new()
+      text(0.5, 0.56, "Vue rainette_explor non disponible dans ce runtime.", cex = 1.05)
+      text(0.5, 0.45, "Utilise les autres onglets (Dendrogramme, Nuage, Cooccurrences, Concordancier).", cex = 0.95)
+      text(0.5, 0.34, paste0("Détail : ", dernier_message), cex = 0.85, col = "#555555")
+    }
+  })
+
+  output$ui_concordancier_modal <- renderUI({
+    if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
+      return(tags$p("Concordancier non disponible. Lance une analyse pour le générer."))
+    }
+
+    if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+      shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+    }
+
+    tags$iframe(
+      src = paste0("/", rv$exports_prefix, "/", basename(rv$html_file)),
+      style = "width: 100%; height: 70vh; border: 1px solid #ddd; background: #fff;"
+    )
+  })
+
+  output$plot_chd_dendrogramme_modal <- renderPlot({
+    req(rv$res)
+
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(5, 4, 4, 2) + 0.1)
+
+    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
+    if (!is.null(expl)) {
+      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
+      if (isTRUE(ok_expl)) return(invisible(NULL))
+    }
+
+    d <- obtenir_objet_dendrogramme(rv$res)
+    if (!is.null(d)) {
+      if (inherits(d, "dendrogram")) {
+        plot(d, main = "Dendrogramme (rainette)", xlab = "", sub = "")
+      } else {
+        plot(d, labels = FALSE, hang = -1, main = "Dendrogramme (rainette)", xlab = "", sub = "")
+        k_aff <- input$k
+        if (!is.null(k_aff) && is.finite(k_aff) && k_aff >= 2) {
+          try(rect.hclust(d, k = as.integer(k_aff)), silent = TRUE)
+        }
+      }
+      return(invisible(NULL))
+    }
+
+    plot.new()
+    text(0.5, 0.5, "Dendrogramme indisponible.", cex = 1.1)
+  })
+
+  output$plot_chd_wordcloud_modal <- renderPlot({
+    req(rv$dfm, rv$filtered_corpus, rv$textes_indexation)
+
+    cl <- input$explor_classe
+    validate(need(!is.null(cl) && nzchar(as.character(cl)), "Choisis une classe dans l'onglet Exploration CHD."))
+
+    dn_dfm <- docnames(rv$dfm)
+    dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
+    validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
+
+    classes_seg <- extraire_classes_alignees(rv$filtered_corpus, dn_dfm, "Classes")
+    idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
+    validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour un nuage de mots."))
+
+    dfm_cl <- rv$dfm[dn_dfm[idx], ]
+    fr <- colSums(dfm_cl)
+    fr <- sort(fr, decreasing = TRUE)
+    fr <- fr[fr > 0]
+    validate(need(length(fr) >= 2, "Pas assez de termes pour un nuage de mots."))
+
+    top_n <- input$top_n
+    if (is.null(top_n) || !is.finite(top_n) || top_n < 5) top_n <- 20
+    fr <- head(fr, top_n)
+
+    set.seed(123)
+    wordcloud(
+      words = names(fr),
+      freq = as.numeric(fr),
+      max.words = length(fr),
+      random.order = FALSE,
+      rot.per = 0.1,
+      scale = c(4, 0.9)
+    )
+  })
+
+  output$plot_chd_cooc_modal <- renderPlot({
+    req(rv$dfm, rv$filtered_corpus, rv$textes_indexation)
+
+    cl <- input$explor_classe
+    validate(need(!is.null(cl) && nzchar(as.character(cl)), "Choisis une classe dans l'onglet Exploration CHD."))
+
+    dn_dfm <- docnames(rv$dfm)
+    dn_dfm <- intersect(dn_dfm, docnames(rv$filtered_corpus))
+    validate(need(length(dn_dfm) >= 2, "Alignement DFM/corpus impossible."))
+
+    classes_seg <- extraire_classes_alignees(rv$filtered_corpus, dn_dfm, "Classes")
+    idx <- which(!is.na(classes_seg) & classes_seg == as.character(cl))
+    validate(need(length(idx) >= 2, "Pas assez de segments dans cette classe pour les cooccurrences."))
+
+    textes_cl <- rv$textes_indexation[dn_dfm[idx]]
+    textes_cl <- textes_cl[!is.na(textes_cl) & nzchar(textes_cl)]
+    validate(need(length(textes_cl) >= 2, "Textes de classe insuffisants."))
+
+    tok <- tokens(textes_cl)
+
+    window_cooc <- input$window_cooc
+    if (is.null(window_cooc) || !is.finite(window_cooc) || window_cooc < 1) window_cooc <- 5
+
+    f <- fcm(tok, context = "window", window = as.integer(window_cooc), tri = FALSE)
+    mat <- as.matrix(f)
+    diag(mat) <- 0
+
+    top_feat <- input$top_feat
+    if (is.null(top_feat) || !is.finite(top_feat) || top_feat < 5) top_feat <- 20
+
+    freq_termes <- sort(colSums(dfm(tokens(textes_cl))), decreasing = TRUE)
+    garder <- intersect(names(freq_termes), colnames(mat))
+    garder <- head(garder, min(length(garder), as.integer(top_feat)))
+    validate(need(length(garder) >= 2, "Pas assez de termes pour construire un graphe de cooccurrences."))
+
+    mat2 <- mat[garder, garder, drop = FALSE]
+    mat2[mat2 < 1] <- 0
+    validate(need(sum(mat2) > 0, "Aucune cooccurrence détectée avec ces paramètres."))
+
+    g <- construire_graphe_adjacence(mat2)
+    g <- simplify(g, remove.multiple = TRUE, remove.loops = TRUE)
+    validate(need(ecount(g) > 0, "Graphe vide (aucune arête). Augmente window ou top_feat."))
+
+    w <- E(g)$weight
+    ord <- order(w, decreasing = TRUE)
+    max_edges <- min(length(ord), 200)
+
+    if ("subgraph.edges" %in% getNamespaceExports("igraph")) {
+      g2 <- igraph::subgraph.edges(g, E(g)[ord[seq_len(max_edges)]], delete.vertices = TRUE)
+    } else {
       e_keep <- E(g)[ord[seq_len(max_edges)]]
       v_keep <- unique(as.vector(ends(g, e_keep)))
       g2 <- induced_subgraph(g, v_keep)
