@@ -861,6 +861,23 @@ server <- function(input, output, session) {
     req(rv$res, rv$dfm, rv$filtered_corpus)
 
     tryCatch({
+      ancien_viewer <- getOption("shinygadgets.viewer")
+      ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
+      on.exit({
+        options(shinygadgets.viewer = ancien_viewer)
+        options(shinygadgets.defaultViewer = ancien_default_viewer)
+      }, add = TRUE)
+
+      viewer_popup <- function(url) {
+        session$sendCustomMessage("ouvrirFenetreRainette", list(url = url))
+        invisible(NULL)
+      }
+
+      options(
+        shinygadgets.viewer = viewer_popup,
+        shinygadgets.defaultViewer = viewer_popup
+      )
+
       dn <- intersect(quanteda::docnames(rv$dfm), quanteda::docnames(rv$filtered_corpus))
       if (length(dn) < 2) {
         stop("Alignement DFM/corpus impossible (moins de 2 segments communs).")

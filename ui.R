@@ -5,11 +5,26 @@ library(htmltools)
 
 ui <- fluidPage(
   tags$head(
-    tags$script(HTML("\
-      Shiny.addCustomMessageHandler('ouvrirFenetreRainette', function(message) {\
-        if (!message || !message.url) return;\
-        window.open(message.url, '_blank', 'noopener,noreferrer');\
-      });\
+    tags$script(HTML("
+      window.rainettePopup = null;
+      Shiny.addCustomMessageHandler('ouvrirFenetreRainette', function(message) {
+        if (!message || !message.url) return;
+        if (window.rainettePopup && !window.rainettePopup.closed) {
+          window.rainettePopup.location = message.url;
+          window.rainettePopup.focus();
+          return;
+        }
+        window.rainettePopup = window.open(message.url, '_blank', 'noopener,noreferrer');
+      });
+      document.addEventListener('DOMContentLoaded', function() {
+        var bouton = document.getElementById('explor');
+        if (!bouton) return;
+        bouton.addEventListener('click', function() {
+          if (!window.rainettePopup || window.rainettePopup.closed) {
+            window.rainettePopup = window.open('', '_blank', 'noopener,noreferrer');
+          }
+        });
+      });
     ")),
     tags$style(HTML("
       #shiny-modal .modal-dialog {
