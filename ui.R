@@ -72,9 +72,9 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Nettoyage"),
 
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
-      checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = TRUE),
+      checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = TRUE),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
