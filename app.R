@@ -957,7 +957,7 @@ server <- function(input, output, session) {
             paste0("Classe affichée : ", ifelse(is.null(classe_active) || !nzchar(as.character(classe_active)), "(non sélectionnée)", as.character(classe_active)))
           ),
           tabsetPanel(
-            tabPanel("rainette_explor", uiOutput("ui_rainette_explor_modal")),
+            tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
             tabPanel("Dendrogramme", plotOutput("plot_chd_dendrogramme_modal", height = "360px")),
             tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
             tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
@@ -1166,27 +1166,49 @@ server <- function(input, output, session) {
     )
   })
 
-  output$ui_rainette_explor_modal <- renderUI({
-    req(rv$res, rv$dfm, rv$filtered_corpus)
+  output$plot_rainette_explor_modal <- renderPlot({
+    req(rv$res, rv$dfm)
 
-    expl <- construire_rainette_explor(rv$res, rv$dfm, rv$filtered_corpus)
-    if (is.null(expl)) {
-      return(tags$p("Affichage rainette_explor natif indisponible avec cette version de l'objet. Utilise les onglets Dendrogramme / Nuage / Cooccurrences / Concordancier."))
+    op <- par(no.readonly = TRUE)
+    on.exit(par(op), add = TRUE)
+    par(mar = c(4, 4, 3, 1))
+
+    plot_ok <- FALSE
+    dernier_message <- "Fonction rainette_plot indisponible."
+
+    if (exists("rainette_plot", mode = "function")) {
+      essais <- list(
+        list(res = rv$res, dtm = rv$dfm, corpus = rv$filtered_corpus),
+        list(rv$res, rv$dfm, rv$filtered_corpus),
+        list(res = rv$res, dtm = rv$dfm),
+        list(rv$res, rv$dfm),
+        list(rv$res),
+        list(res = rv$res)
+      )
+
+      for (args in essais) {
+        if (any(vapply(args, is.null, logical(1)))) next
+
+        err <- tryCatch({
+          do.call(rainette_plot, args)
+          NULL
+        }, error = function(e) e)
+
+        if (is.null(err)) {
+          plot_ok <- TRUE
+          break
+        }
+
+        dernier_message <- err$message
+      }
     }
 
-    if (inherits(expl, "htmlwidget")) {
-      return(htmltools::tagList(expl))
+    if (!plot_ok) {
+      plot.new()
+      text(0.5, 0.56, "Vue rainette_explor non disponible dans ce runtime.", cex = 1.05)
+      text(0.5, 0.45, "Utilise les autres onglets (Dendrogramme, Nuage, Cooccurrences, Concordancier).", cex = 0.95)
+      text(0.5, 0.34, paste0("Détail : ", dernier_message), cex = 0.85, col = "#555555")
     }
-
-    if (inherits(expl, "shiny.tag") || inherits(expl, "shiny.tag.list")) {
-      return(expl)
-    }
-
-    if (is.list(expl) && !is.null(expl$ui) && (inherits(expl$ui, "shiny.tag") || inherits(expl$ui, "shiny.tag.list"))) {
-      return(expl$ui)
-    }
-
-    tags$p("Objet rainette_explor généré mais non intégrable directement en UI. Utilise les autres onglets de la fenêtre.")
   })
 
   output$ui_concordancier_modal <- renderUI({
