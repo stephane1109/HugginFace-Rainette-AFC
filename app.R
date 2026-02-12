@@ -235,6 +235,52 @@ obtenir_objet_dendrogramme <- function(res) {
   NULL
 }
 
+
+construire_rainette_explor <- function(res, dfm_obj = NULL) {
+  if (!exists("rainette_explor", mode = "function")) return(NULL)
+
+  essais <- list(
+    list(res),
+    list(res = res),
+    list(x = res),
+    list(dfm_obj, res),
+    list(dtm = dfm_obj, res = res),
+    list(dfm = dfm_obj, res = res),
+    list(x = res, dtm = dfm_obj)
+  )
+
+  for (args in essais) {
+    if (any(vapply(args, is.null, logical(1)))) next
+    out <- tryCatch(do.call(rainette_explor, args), error = function(e) NULL)
+    if (!is.null(out)) return(out)
+  }
+
+  NULL
+}
+
+tracer_dendrogramme_rainette_explor <- function(expl_obj) {
+  if (is.null(expl_obj)) return(FALSE)
+
+  essais <- list(
+    function() plot(expl_obj),
+    function() plot(expl_obj, type = "tree"),
+    function() plot(expl_obj, what = "tree"),
+    function() plot(expl_obj, display = "tree"),
+    function() print(expl_obj)
+  )
+
+  for (fn in essais) {
+    ok <- tryCatch({
+      fn()
+      TRUE
+    }, error = function(e) FALSE)
+
+    if (isTRUE(ok)) return(TRUE)
+  }
+
+  FALSE
+}
+
 construire_graphe_adjacence <- function(mat) {
   if ("graph_from_adjacency_matrix" %in% getNamespaceExports("igraph")) {
     igraph::graph_from_adjacency_matrix(mat, mode = "undirected", weighted = TRUE, diag = FALSE)
@@ -899,13 +945,21 @@ server <- function(input, output, session) {
   output$plot_chd_dendrogramme <- renderPlot({
     req(rv$res)
 
-    # On récupère un objet dendrogramme/hclust quelle que soit la structure réelle
-    d <- obtenir_objet_dendrogramme(rv$res)
+    output$explor_erreur <- renderText("")
 
     op <- par(no.readonly = TRUE)
     on.exit(par(op), add = TRUE)
     par(mar = c(5, 4, 4, 2) + 0.1)
 
+    # 1) Priorité au workflow rainette_explor (README rainette)
+    expl <- construire_rainette_explor(rv$res, rv$dfm)
+    if (!is.null(expl)) {
+      ok_expl <- tryCatch(tracer_dendrogramme_rainette_explor(expl), error = function(e) FALSE)
+      if (isTRUE(ok_expl)) return(invisible(NULL))
+    }
+
+    # 2) Fallback : objet dendrogramme/hclust accessible dans l'objet résultat
+    d <- obtenir_objet_dendrogramme(rv$res)
     if (!is.null(d)) {
       if (inherits(d, "dendrogram")) {
         plot(d, main = "Dendrogramme (rainette)", xlab = "", sub = "")
@@ -919,18 +973,37 @@ server <- function(input, output, session) {
       return(invisible(NULL))
     }
 
-    # Dernier recours : on tente plot(res) si la méthode existe
-    ok <- TRUE
-    tryCatch({
-      plot(rv$res, labels = FALSE, hang = -1)
-    }, error = function(e) {
-      ok <<- FALSE
-      output$explor_erreur <- renderText({
-        paste0("Impossible d'afficher le dendrogramme : ", e$message)
-      })
-    })
+    # 3) Dernier recours : objets convertibles
+    plot_ok <- FALSE
+    dernier_message <- ""
 
-    if (!ok) {
+    essais <- list(
+      function() plot(rv$res),
+      function() plot(as.dendrogram(rv$res), main = "Dendrogramme (rainette)", xlab = "", sub = ""),
+      function() {
+        hc <- as.hclust(rv$res)
+        plot(hc, labels = FALSE, hang = -1, main = "Dendrogramme (rainette)", xlab = "", sub = "")
+      }
+    )
+
+    for (fn in essais) {
+      err <- tryCatch({
+        fn()
+        NULL
+      }, error = function(e) e)
+
+      if (is.null(err)) {
+        plot_ok <- TRUE
+        break
+      }
+
+      dernier_message <- err$message
+    }
+
+    if (!plot_ok) {
+      output$explor_erreur <- renderText({
+        paste0("Impossible d'afficher le dendrogramme : ", dernier_message)
+      })
       plot.new()
       text(0.5, 0.5, "Dendrogramme indisponible (voir message).", cex = 1.1)
     }
