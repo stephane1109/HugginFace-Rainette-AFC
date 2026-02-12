@@ -31,6 +31,10 @@ ui <- fluidPage(
   ),
 
   titlePanel("CHD - AFC avec Rainette sur corpus IRaMuTeQ"),
+  tags$p(
+    style = "font-size: 14px;",
+    "Le script est basé sur le package Rainette de Julien Barnier, l'exercice ici est de rendre fonctionnel sur un serveur distant l'analyse CHD et AFC. En test j'ai également expérimenté la recherche de NER dans le corpus s'appuyant sur la librairie Spacy (modele \"md\"). Pour d'autres infos vous pouvez consulter mon site www.codeandcortex.fr"
+  ),
 
   sidebarLayout(
     sidebarPanel(
@@ -68,9 +72,9 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Nettoyage"),
 
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
-      checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = TRUE),
+      checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = TRUE),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
