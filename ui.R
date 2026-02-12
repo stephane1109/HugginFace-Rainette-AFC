@@ -3,7 +3,7 @@
 library(shiny)
 library(htmltools)
 
-ui <- fluidPage(
+main_ui <- fluidPage(
   tags$head(
     tags$script(HTML("\
       Shiny.addCustomMessageHandler('ouvrirFenetreRainette', function(message) {\
@@ -223,3 +223,16 @@ ui <- fluidPage(
     )
   )
 )
+
+
+ui <- function(request) {
+  query_str <- if (is.null(request$QUERY_STRING)) "" else request$QUERY_STRING
+  query <- shiny::parseQueryString(query_str)
+  if (!is.null(query$explore_key) && nzchar(query$explore_key)) {
+    return(fluidPage(
+      tags$head(tags$style(HTML("body { background: #fff; }"))),
+      uiOutput("explore_app_ui")
+    ))
+  }
+  main_ui
+}
