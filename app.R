@@ -958,7 +958,6 @@ server <- function(input, output, session) {
           ),
           tabsetPanel(
             tabPanel("rainette_explor", plotOutput("plot_rainette_explor_modal", height = "700px")),
-            tabPanel("Dendrogramme", plotOutput("plot_chd_dendrogramme_modal", height = "360px")),
             tabPanel("Nuage de mots", plotOutput("plot_chd_wordcloud_modal", height = "520px")),
             tabPanel("Cooccurrences", plotOutput("plot_chd_cooc_modal", height = "620px")),
             tabPanel("Concordancier", uiOutput("ui_concordancier_modal"))
