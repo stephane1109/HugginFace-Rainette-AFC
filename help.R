@@ -11,6 +11,7 @@
 ###############################################################################
 #                    Script CHD - version beta 0.2 - 12-02-2026               #
 #      A partir d'un corpus texte formaté aux exigences IRAMUTEQ              #
+#                      wwww.codeandcortex.fr                                  #          
 #                                                                             #
 #      1.Réalise la CHD sur le corpus, sans rainette_explor                   #
 #      2.Extrait chi2, lr, freq, docprop dans un CSV                          #
