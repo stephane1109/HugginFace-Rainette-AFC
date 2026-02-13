@@ -1430,15 +1430,20 @@ server <- function(input, output, session) {
     colonnes <- intersect(c("Modalite", "Classe_max", "frequency", "chi2", "p_value"), names(df))
     df <- df[, colonnes, drop = FALSE]
     if ("p_value" %in% names(df)) {
+      p_values <- df$p_value
       df$p_value <- ifelse(
-        is.na(df$p_value),
+        is.na(p_values),
         NA_character_,
-        formatC(df$p_value, format = "f", digits = 6)
+        ifelse(
+          p_values > 0.05,
+          sprintf("<span style='color:#d97706;font-weight:600;'>%s</span>", formatC(p_values, format = "f", digits = 6)),
+          formatC(p_values, format = "f", digits = 6)
+        )
       )
     }
     if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
     head(df, 200)
-  }, rownames = FALSE)
+  }, rownames = FALSE, sanitize.text.function = function(x) x)
 
   output$table_afc_eig <- renderTable({
     if (!is.null(rv$afc_erreur) && nzchar(rv$afc_erreur)) {
