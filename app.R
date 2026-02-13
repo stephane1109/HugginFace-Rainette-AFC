@@ -1044,7 +1044,7 @@ server <- function(input, output, session) {
           "Impossible d'ouvrir l'UI native rainette_explor avec cette version/configuration. ",
           if (length(erreurs) > 0) paste0("Dernière erreur : ", tail(erreurs, 1)) else ""
         )
-      )
+      }
     }, error = function(e) {
       msg <- paste0("Explorateur : ", e$message)
       ajouter_log(rv, msg)
