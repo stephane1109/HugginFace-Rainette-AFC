@@ -281,43 +281,6 @@ calculer_k_effectif <- function(dfm_obj, k_demande, min_split_members, rv = NULL
   k_effectif
 }
 
-tailles_classes <- function(groupes) {
-  tb <- sort(table(as.integer(groupes)), decreasing = TRUE)
-  as.integer(tb)
-}
-
-classes_respectent_min <- function(groupes, min_split_members) {
-  if (!length(groupes)) return(FALSE)
-  tcls <- tailles_classes(groupes)
-  if (!length(tcls)) return(FALSE)
-  all(tcls >= as.integer(min_split_members))
-}
-
-trouver_k_valide <- function(k_initial, min_split_members, eval_groupes, rv = NULL, contexte = "CHD") {
-  for (k_test in seq.int(k_initial, 2, by = -1)) {
-    groupes <- eval_groupes(k_test)
-    if (classes_respectent_min(groupes, min_split_members)) {
-      if (!is.null(rv) && k_test < k_initial) {
-        ajouter_log(
-          rv,
-          paste0(
-            contexte,
-            " : k réduit de ", k_initial, " à ", k_test,
-            " car au moins une classe finale avait un effectif < min_split_members=", min_split_members, "."
-          )
-        )
-      }
-      return(list(k = k_test, groupes = groupes))
-    }
-  }
-
-  stop(
-    contexte,
-    " : aucune partition valide trouvée avec des classes finales >= min_split_members=", min_split_members,
-    ". Réduis min_split_members ou augmente le nombre de segments."
-  )
-}
-
 verifier_dfm_avant_rainette <- function(dfm_obj, input) {
   if (ndoc(dfm_obj) < 2) {
     stop("Après filtrages, il reste moins de 2 segments utilisables. Réduis les filtrages ou augmente segment_size.")
@@ -887,30 +850,21 @@ server <- function(input, output, session) {
 
           k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
 
-          res <- NULL
-          choix_k <- trouver_k_valide(
-            k_initial = k_effectif,
+          res <- rainette(
+            dfm_obj,
+            k = k_effectif,
+            min_segment_size = input$min_segment_size,
             min_split_members = input$min_split_members,
-            eval_groupes = function(k_test) {
-              res <<- rainette(
-                dfm_obj,
-                k = k_test,
-                min_segment_size = input$min_segment_size,
-                min_split_members = input$min_split_members,
-                doc_id = "segment_source"
-              )
-              if (is.null(res) || is.null(res$group) || length(res$group) == 0) return(integer(0))
-              res$group
-            },
-            rv = rv,
-            contexte = "CHD simple"
+            doc_id = "segment_source"
           )
 
-          groupes <- choix_k$groupes
+          if (is.null(res) || is.null(res$group) || length(res$group) == 0) stop("Rainette n'a pas pu calculer de clusters. Diminue les filtrages, augmente segment_size, ou réduis k.")
+
+          groupes <- res$group
           res_final <- res
           rv$res_chd <- res
           rv$dfm_chd <- dfm_obj
-          rv$max_n_groups <- max(groupes, na.rm = TRUE)
+          rv$max_n_groups <- max(res$group, na.rm = TRUE)
           rv$max_n_groups_chd <- rv$max_n_groups
 
         } else {
@@ -920,28 +874,14 @@ server <- function(input, output, session) {
 
           k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
 
-          res1 <- NULL
-          res2 <- NULL
-          res_d <- NULL
+          res1 <- rainette(dfm_obj, k = k_effectif, min_segment_size = input$min_segment_size, min_split_members = input$min_split_members, doc_id = "segment_source")
+          if (is.null(res1) || is.null(res1$group) || length(res1$group) == 0) stop("Classification 1 (rainette) impossible.")
 
-          choix_k <- trouver_k_valide(
-            k_initial = k_effectif,
-            min_split_members = input$min_split_members,
-            eval_groupes = function(k_test) {
-              res1 <<- rainette(dfm_obj, k = k_test, min_segment_size = input$min_segment_size, min_split_members = input$min_split_members, doc_id = "segment_source")
-              if (is.null(res1) || is.null(res1$group) || length(res1$group) == 0) return(integer(0))
+          res2 <- rainette(dfm_obj, k = k_effectif, min_segment_size = input$min_segment_size2, min_split_members = input$min_split_members, doc_id = "segment_source")
+          if (is.null(res2) || is.null(res2$group) || length(res2$group) == 0) stop("Classification 2 (rainette) impossible.")
 
-              res2 <<- rainette(dfm_obj, k = k_test, min_segment_size = input$min_segment_size2, min_split_members = input$min_split_members, doc_id = "segment_source")
-              if (is.null(res2) || is.null(res2$group) || length(res2$group) == 0) return(integer(0))
-
-              res_d <<- rainette2(res1, res2, max_k = input$max_k_double)
-              cutree(res_d, k = k_test)
-            },
-            rv = rv,
-            contexte = "CHD double"
-          )
-
-          groupes <- choix_k$groupes
+          res_d <- rainette2(res1, res2, max_k = input$max_k_double)
+          groupes <- cutree(res_d, k = k_effectif)
 
           res_final <- res_d
           rv$res_chd <- res1
