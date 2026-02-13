@@ -1473,6 +1473,11 @@ server <- function(input, output, session) {
 
         if ("chi2" %in% names(sous_df)) {
           sous_df <- sous_df[order(-sous_df$chi2), , drop = FALSE]
+          sous_df$chi2 <- ifelse(
+            is.na(sous_df$chi2),
+            NA_character_,
+            formatC(sous_df$chi2, format = "f", digits = 6)
+          )
         }
 
         sous_df <- head(sous_df, 100)
@@ -1529,6 +1534,13 @@ server <- function(input, output, session) {
       )
     }
     if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
+    if ("chi2" %in% names(df)) {
+      df$chi2 <- ifelse(
+        is.na(df$chi2),
+        NA_character_,
+        formatC(df$chi2, format = "f", digits = 6)
+      )
+    }
     head(df, 200)
   }, rownames = FALSE, sanitize.text.function = function(x) x)
 
