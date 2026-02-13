@@ -383,6 +383,91 @@ server <- function(input, output, session) {
     tags$p(paste0("AFC calculée sur ", ncl, " classes et ", nt, " termes (table Classes × Termes)."))
   })
 
+  output$ui_ner_statut <- renderUI({
+    if (!isTRUE(input$activer_ner)) {
+      return(tags$p("NER désactivé. Coche 'Activer NER (spaCy)' puis relance l'analyse."))
+    }
+
+    if (is.null(rv$ner_df)) {
+      return(tags$p("NER activé, mais aucun résultat disponible. Relance une analyse complète."))
+    }
+
+    nb_ent <- nrow(rv$ner_df)
+    nb_seg <- ifelse(is.na(rv$ner_nb_segments), 0, rv$ner_nb_segments)
+    tags$p(paste0("NER calculé sur ", nb_seg, " segments. Entités détectées : ", nb_ent, "."))
+  })
+
+  output$table_ner_resume <- renderTable({
+    req(rv$ner_df)
+    if (nrow(rv$ner_df) == 0) return(data.frame(Message = "Aucune entité détectée.", stringsAsFactors = FALSE))
+
+    as.data.frame(sort(table(rv$ner_df$ent_label), decreasing = TRUE), stringsAsFactors = FALSE) |>
+      dplyr::rename(Type = Var1, Effectif = Freq)
+  }, rownames = FALSE)
+
+  output$table_ner_details <- renderTable({
+    req(rv$ner_df)
+    if (nrow(rv$ner_df) == 0) return(data.frame(Message = "Aucune entité détectée.", stringsAsFactors = FALSE))
+
+    df <- rv$ner_df[, intersect(c("Classe", "doc_id", "ent_text", "ent_label", "start_char", "end_char"), names(rv$ner_df)), drop = FALSE]
+    head(df, 200)
+  }, rownames = FALSE)
+
+  output$plot_ner_wordcloud <- renderPlot({
+    req(rv$ner_df)
+    if (nrow(rv$ner_df) == 0) {
+      plot.new()
+      text(0.5, 0.5, "Aucune entité détectée.", cex = 1.1)
+      return(invisible(NULL))
+    }
+
+    freq <- sort(table(rv$ner_df$ent_text), decreasing = TRUE)
+    suppressWarnings(wordcloud(
+      words = names(freq),
+      freq = as.numeric(freq),
+      max.words = min(150, length(freq)),
+      random.order = FALSE,
+      colors = brewer.pal(8, "Dark2")
+    ))
+  })
+
+  output$ui_ner_wordcloud_par_classe <- renderUI({
+    req(rv$ner_df)
+    if (nrow(rv$ner_df) == 0 || !"Classe" %in% names(rv$ner_df)) return(tags$p("Aucune entité à afficher par classe."))
+
+    classes <- sort(unique(rv$ner_df$Classe))
+    if (length(classes) == 0) return(tags$p("Aucune classe disponible pour l'affichage."))
+
+    tagList(lapply(classes, function(cl) {
+      nm <- paste0("plot_ner_wordcloud_cl_", cl)
+      local({
+        cl_local <- cl
+        output[[nm]] <- renderPlot({
+          df_cl <- rv$ner_df[rv$ner_df$Classe == cl_local, , drop = FALSE]
+          if (nrow(df_cl) == 0) {
+            plot.new()
+            text(0.5, 0.5, paste0("Classe ", cl_local, " : aucune entité."), cex = 1.1)
+            return(invisible(NULL))
+          }
+
+          freq <- sort(table(df_cl$ent_text), decreasing = TRUE)
+          suppressWarnings(wordcloud(
+            words = names(freq),
+            freq = as.numeric(freq),
+            max.words = min(120, length(freq)),
+            random.order = FALSE,
+            colors = brewer.pal(8, "Set2")
+          ))
+        })
+      })
+
+      tagList(
+        tags$h4(paste0("Classe ", cl)),
+        plotOutput(nm, height = "360px")
+      )
+    }))
+  })
+
   output$ui_chd_statut <- renderUI({
     if (is.null(rv$res)) {
       return(tags$p("CHD non disponible. Lance une analyse."))
