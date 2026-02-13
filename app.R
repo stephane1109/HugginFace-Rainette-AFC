@@ -11,7 +11,7 @@
 #      5.Génère nuages de mots et graphes de cooccurrences par classe         #
 #      6.Exporte les segments de texte par classe au format text              #
 #      7.Creation d'un concordancier au format html                           #
-#      8.Recherche de coocurrence                                             #
+#      8.Recherche de coocurrences                                            #
 ###############################################################################
 
 library(shiny)
