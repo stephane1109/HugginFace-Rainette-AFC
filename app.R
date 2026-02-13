@@ -840,6 +840,8 @@ server <- function(input, output, session) {
           if (file.exists(chd_png)) explor_assets$chd <- file.path("explor", basename(chd_png))
         }, silent = TRUE)
 
+        rv$explor_assets <- explor_assets
+
         classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
 
         for (cl in classes_uniques) {
@@ -1084,6 +1086,42 @@ server <- function(input, output, session) {
     })
 
     do.call(tagList, blocs)
+  })
+
+  output$ui_explor_wordclouds <- renderUI({
+    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$wordclouds) || nrow(rv$explor_assets$wordclouds) == 0) {
+      return(tags$p("Aucun nuage de mots disponible."))
+    }
+
+    items <- lapply(seq_len(nrow(rv$explor_assets$wordclouds)), function(i) {
+      cl <- as.character(rv$explor_assets$wordclouds$classe[i])
+      src <- as.character(rv$explor_assets$wordclouds$src[i])
+      tags$div(
+        style = "margin-bottom: 20px;",
+        tags$h4(paste0("Classe ", cl)),
+        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
+      )
+    })
+
+    do.call(tagList, items)
+  })
+
+  output$ui_explor_coocs <- renderUI({
+    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$coocs) || nrow(rv$explor_assets$coocs) == 0) {
+      return(tags$p("Aucune cooccurrence disponible."))
+    }
+
+    items <- lapply(seq_len(nrow(rv$explor_assets$coocs)), function(i) {
+      cl <- as.character(rv$explor_assets$coocs$classe[i])
+      src <- as.character(rv$explor_assets$coocs$src[i])
+      tags$div(
+        style = "margin-bottom: 20px;",
+        tags$h4(paste0("Classe ", cl)),
+        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
+      )
+    })
+
+    do.call(tagList, items)
   })
 
   output$plot_afc <- renderPlot({
