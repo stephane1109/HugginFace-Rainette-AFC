@@ -271,6 +271,34 @@ construire_graphe_adjacence <- function(mat) {
   }
 }
 
+generer_chd_explor_si_absente <- function(rv) {
+  if (is.null(rv$export_dir) || !nzchar(rv$export_dir)) return(FALSE)
+
+  explor_dir <- file.path(rv$export_dir, "explor")
+  dir.create(explor_dir, showWarnings = FALSE, recursive = TRUE)
+
+  chd_png <- file.path(explor_dir, "chd.png")
+  if (file.exists(chd_png)) return(TRUE)
+
+  chd_obj <- rv$res_chd
+  if (is.null(chd_obj)) chd_obj <- rv$res
+  if (is.null(chd_obj)) return(FALSE)
+
+  ok <- FALSE
+  try({
+    png(chd_png, width = 2000, height = 1500, res = 180)
+    rainette_plot(chd_obj)
+    dev.off()
+    ok <- file.exists(chd_png)
+  }, silent = TRUE)
+
+  if (!ok) {
+    try(grDevices::dev.off(), silent = TRUE)
+  }
+
+  ok
+}
+
 server <- function(input, output, session) {
 
   rv <- reactiveValues(
@@ -986,6 +1014,11 @@ server <- function(input, output, session) {
     }
     if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
       shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+    }
+
+    chd_ok <- generer_chd_explor_si_absente(rv)
+    if (!isTRUE(chd_ok)) {
+      ajouter_log(rv, "Exploration : CHD non disponible (image non générée).")
     }
 
     classe_defaut <- as.character(rv$clusters[1])
