@@ -76,11 +76,11 @@ surligner_terme_segment <- function(segment, terme) {
 
   seg_safe <- htmlEscape(segment)
   terme_safe <- htmlEscape(terme)
-  pattern <- paste0("(?i)", regex_echapper(terme_safe))
+  pattern <- paste0("(?i)(", regex_echapper(terme_safe), ")")
 
   gsub(
     pattern,
-    "<span style='background-color: #fff59d; font-weight: 600;'>\\0</span>",
+    "<span style='background-color: #fff59d; font-weight: 600;'>\\1</span>",
     seg_safe,
     perl = TRUE
   )
