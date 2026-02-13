@@ -36,7 +36,7 @@ ui <- fluidPage(
     tags$br(),
     "Pour d'autres infos vous pouvez consulter mon site www.codeandcortex.fr",
     tags$br(),
-    "version beta - 13-02-2026"
+    "version beta 0.2 - 12-02-2026"
   ),
 
   sidebarLayout(
@@ -157,20 +157,7 @@ ui <- fluidPage(
           tableOutput("table_classes")
         ),
 
-        tabPanel(
-          "NER (beta)",
-          tags$h3("Détection d'entités nommées (spaCy)"),
-          uiOutput("ui_ner_statut"),
-          tags$h3("Résumé"),
-          tableOutput("table_ner_resume"),
-          tags$h3("Détails"),
-          tableOutput("table_ner_details"),
-          tags$h3("Nuage de mots (entités)"),
-          plotOutput("plot_ner_wordcloud", height = "520px"),
-          tags$h3("Nuages par classe"),
-          uiOutput("ui_ner_wordcloud_par_classe")
-        ),
-
+        
         tabPanel(
           "AFC",
           tags$h3("AFC"),
@@ -195,6 +182,20 @@ ui <- fluidPage(
           tags$h4("Valeurs propres"),
           tableOutput("table_afc_eig")
         ),
+        
+        tabPanel(
+          "NER (beta)",
+          tags$h3("Détection d'entités nommées (spaCy)"),
+          uiOutput("ui_ner_statut"),
+          tags$h3("Résumé"),
+          tableOutput("table_ner_resume"),
+          tags$h3("Détails"),
+          tableOutput("table_ner_details"),
+          tags$h3("Nuage de mots (entités)"),
+          plotOutput("plot_ner_wordcloud", height = "520px"),
+          tags$h3("Nuages par classe"),
+          uiOutput("ui_ner_wordcloud_par_classe")
+        ),
 
         tabPanel(
           "Aide",
@@ -202,7 +203,7 @@ ui <- fluidPage(
         ),
 
         tabPanel(
-          "Readme (Rainette)",
+          "Readme (Rainette.md)",
           tags$div(
             style = "padding: 12px;",
             tags$a(
