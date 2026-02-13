@@ -113,7 +113,7 @@ ui <- fluidPage(
 
       tags$hr(),
 
-      tabPanel("Cooccurences)",
+      tags$div(class = "sidebar-section-title", "Cooccurrences"),
 
       numericInput("top_n", "top_n (wordcloud)", value = 20, min = 5, step = 1),
       numericInput("window_cooc", "window (cooccurrences)", value = 5, min = 1, step = 1),
@@ -207,5 +207,4 @@ ui <- fluidPage(
       )
     )
   )
-)
 )
