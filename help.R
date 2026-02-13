@@ -1,5 +1,5 @@
 ################################
-# # Rainette ## développé par Julien Barnier
+## Rainette ## développé par Julien Barnier
 # Doc Rainette : https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd
 # https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html
 # https://juba.r-universe.dev/builds
