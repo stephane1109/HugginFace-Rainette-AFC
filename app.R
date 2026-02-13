@@ -964,10 +964,14 @@ server <- function(input, output, session) {
         classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
 
         for (cl in classes_uniques) {
+          top_n_demande <- suppressWarnings(as.integer(input$top_n))
+          if (!is.finite(top_n_demande) || is.na(top_n_demande)) top_n_demande <- 20L
+          top_n_demande <- max(5L, top_n_demande)
+
           df_stats_cl <- subset(res_stats_df, Classe == cl & p <= input$max_p)
           if (nrow(df_stats_cl) > 0) {
             df_stats_cl <- df_stats_cl[order(-df_stats_cl$chi2), , drop = FALSE]
-            df_stats_cl <- head(df_stats_cl, max(5, as.integer(input$top_n)))
+            df_stats_cl <- head(df_stats_cl, top_n_demande)
 
             wc_png <- file.path(wordcloud_dir, paste0("cluster_", cl, "_wordcloud.png"))
             try({
@@ -991,7 +995,13 @@ server <- function(input, output, session) {
             if (length(tok_cl) > 0) {
               fcm_cl <- fcm(tok_cl, context = "window", window = max(1, as.integer(input$window_cooc)), tri = FALSE)
               term_freq <- sort(colSums(fcm_cl), decreasing = TRUE)
-              feat_sel <- names(term_freq)[seq_len(min(max(5, as.integer(input$top_feat)), length(term_freq)))]
+              top_feat_demande <- suppressWarnings(as.integer(input$top_feat))
+              if (!is.finite(top_feat_demande) || is.na(top_feat_demande)) top_feat_demande <- 20L
+              top_feat_demande <- max(5L, top_feat_demande)
+
+              # On borne aussi par top_n pour garder une cohérence entre nuage de mots et graphe de cooccurrences.
+              top_feat_effectif <- min(top_feat_demande, top_n_demande)
+              feat_sel <- names(term_freq)[seq_len(min(top_feat_effectif, length(term_freq)))]
               fcm_cl <- fcm_select(fcm_cl, feat_sel, selection = "keep")
 
               adj <- as.matrix(fcm_cl)
