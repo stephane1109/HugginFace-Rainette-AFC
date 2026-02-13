@@ -925,6 +925,8 @@ server <- function(input, output, session) {
           }, silent = TRUE)
         }
 
+        rv$explor_assets <- explor_assets
+
         args_concordancier <- list(
           chemin_sortie = html_file,
           segments_by_class = segments_by_class,
@@ -1002,23 +1004,10 @@ server <- function(input, output, session) {
         ),
         tabsetPanel(
           tabPanel(
-            "CHD (rainette_plot)",
+            "CHD",
             tags$br(),
             uiOutput("ui_chd_statut"),
-            fluidRow(
-              column(
-                width = 4,
-                numericInput("explor_chd_k", "Nombre de classes à afficher (k)", value = 5, min = 2, step = 1),
-                selectInput("explor_chd_measure", "Mesure d'association", choices = c("chi2", "fisher", "hyper"), selected = "chi2"),
-                numericInput("explor_chd_n_terms", "Nombre de termes par classe", value = 15, min = 3, step = 1),
-                checkboxInput("explor_chd_show_negative", "Afficher aussi les termes négatifs", value = FALSE),
-                sliderInput("explor_chd_text_size", "Taille du texte", min = 0.6, max = 2, value = 1, step = 0.1)
-              ),
-              column(
-                width = 8,
-                plotOutput("plot_chd", height = "78vh")
-              )
-            )
+            uiOutput("ui_explor_chd")
           ),
           tabPanel(
             "Nuage de mots",
@@ -1033,7 +1022,7 @@ server <- function(input, output, session) {
           tabPanel(
             "Concordancier",
             tags$br(),
-            tags$iframe(src = explor_url, style = "width: 100%; height: 78vh; border: 0;")
+            uiOutput("ui_explor_concordancier")
           )
         )
       ))
@@ -1058,51 +1047,45 @@ server <- function(input, output, session) {
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
   })
 
-  output$plot_chd <- renderPlot({
-    if (is.null(rv$res_chd)) {
-      plot.new()
-      text(0.5, 0.5, "CHD non disponible. Lance une analyse.", cex = 1.1)
-      return(invisible(NULL))
+  output$ui_explor_chd <- renderUI({
+    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$chd) || !nzchar(rv$explor_assets$chd)) {
+      return(tags$p("CHD non disponible dans l'exploration. Relance une analyse."))
     }
 
-    k_val <- ifelse(is.null(input$explor_chd_k), 5L, as.integer(input$explor_chd_k))
-    k_max <- tryCatch(max(as.integer(rv$res_chd$group), na.rm = TRUE), error = function(e) NA_integer_)
-    if (is.finite(k_max) && !is.na(k_max)) k_val <- max(2L, min(k_val, as.integer(k_max)))
-    measure_val <- ifelse(is.null(input$explor_chd_measure), "chi2", as.character(input$explor_chd_measure))
-    n_terms_val <- ifelse(is.null(input$explor_chd_n_terms), 15L, as.integer(input$explor_chd_n_terms))
-    show_negative_val <- isTRUE(input$explor_chd_show_negative)
-    text_size_val <- ifelse(is.null(input$explor_chd_text_size), 1, as.numeric(input$explor_chd_text_size))
-
-    args_plot <- list(
-      x = rv$res_chd,
-      k = k_val,
-      measure = measure_val,
-      n_terms = n_terms_val,
-      show_negative = show_negative_val,
-      text_size = text_size_val
+    tags$img(
+      src = file.path("/", rv$exports_prefix, rv$explor_assets$chd),
+      style = "max-width: 100%; height: auto; border: 1px solid #ddd;"
     )
+  })
 
-    fml <- tryCatch(names(formals(rainette_plot)), error = function(e) character(0))
-    if (length(fml) > 0) {
-      keep <- names(args_plot) %in% fml
-      if (!("x" %in% fml) && ("res" %in% fml)) {
-        names(args_plot)[names(args_plot) == "x"] <- "res"
-        keep <- names(args_plot) %in% fml
-      }
-      args_plot <- args_plot[keep]
+  output$ui_explor_concordancier <- renderUI({
+    if (is.null(rv$filtered_corpus) || length(rv$filtered_corpus) == 0) {
+      return(tags$p("Concordancier non disponible. Lance une analyse."))
     }
 
-    tryCatch({
-      do.call(rainette_plot, args_plot)
-    }, error = function(e) {
-      tryCatch({
-        rainette_plot(rv$res_chd)
-      }, error = function(e2) {
-        plot.new()
-        text(0.5, 0.55, "Impossible d'afficher la CHD dans l'application.", cex = 1.0)
-        text(0.5, 0.45, paste0("Erreur : ", e2$message), cex = 0.9)
-      })
+    classes <- as.character(docvars(rv$filtered_corpus)$Classes)
+    textes <- as.character(rv$filtered_corpus)
+    ids <- docnames(rv$filtered_corpus)
+
+    df <- data.frame(doc_id = ids, Classe = classes, Segment = textes, stringsAsFactors = FALSE)
+    df <- df[!is.na(df$Classe) & nzchar(df$Classe), , drop = FALSE]
+    if (nrow(df) == 0) return(tags$p("Aucun segment classé disponible."))
+
+    cl_uniques <- sort(unique(df$Classe))
+    blocs <- lapply(cl_uniques, function(cl) {
+      dcl <- df[df$Classe == cl, , drop = FALSE]
+      n_aff <- min(30L, nrow(dcl))
+      tags$details(
+        style = "margin-bottom: 16px;",
+        tags$summary(tags$b(paste0("Classe ", cl, " (", nrow(dcl), " segments)"))),
+        tags$p(style = "margin-top: 8px; color: #666;", paste0("Aperçu des ", n_aff, " premiers segments.")),
+        do.call(tagList, lapply(seq_len(n_aff), function(i) {
+          tags$p(style = "padding: 8px; border-bottom: 1px solid #eee;", dcl$Segment[i])
+        }))
+      )
     })
+
+    do.call(tagList, blocs)
   })
 
   output$ui_explor_wordclouds <- renderUI({
