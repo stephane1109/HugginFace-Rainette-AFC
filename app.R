@@ -287,6 +287,7 @@ server <- function(input, output, session) {
     zip_file = NULL,
 
     res = NULL,
+    res_chd = NULL,
     dfm = NULL,
     filtered_corpus = NULL,
     res_stats_df = NULL,
@@ -314,7 +315,9 @@ server <- function(input, output, session) {
     afc_table_vars = NULL,
     afc_plot_classes = NULL,
     afc_plot_termes = NULL,
-    afc_plot_vars = NULL
+    afc_plot_vars = NULL,
+
+    explor_assets = NULL
   )
 
   output$logs <- renderText(rv$logs)
@@ -394,7 +397,9 @@ server <- function(input, output, session) {
     rv$zip_file <- NULL
 
     rv$res <- NULL
+    rv$res_chd <- NULL
     rv$res_type <- "simple"
+    rv$explor_assets <- NULL
 
     ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
 
@@ -566,6 +571,7 @@ server <- function(input, output, session) {
 
           groupes <- res$group
           res_final <- res
+          rv$res_chd <- res
           rv$max_n_groups <- max(res$group, na.rm = TRUE)
 
         } else {
@@ -585,6 +591,7 @@ server <- function(input, output, session) {
           if (isTRUE(input$double_complete_na)) groupes <- rainette2_complete_groups(dfm_obj, groupes)
 
           res_final <- res_d
+          rv$res_chd <- res1
           rv$max_n_groups <- input$max_k_double
         }
 
@@ -828,10 +835,12 @@ server <- function(input, output, session) {
         chd_png <- file.path(explor_dir, "chd.png")
         try({
           png(chd_png, width = 2000, height = 1500, res = 180)
-          rainette_plot(rv$res)
+          rainette_plot(rv$res_chd)
           dev.off()
           if (file.exists(chd_png)) explor_assets$chd <- file.path("explor", basename(chd_png))
         }, silent = TRUE)
+
+        rv$explor_assets <- explor_assets
 
         classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
 
@@ -988,7 +997,7 @@ server <- function(input, output, session) {
         size = "l",
         easyClose = TRUE,
         footer = tagList(
-          tags$a("Ouvrir l'exploration HTML dans un nouvel onglet", href = explor_url, target = "_blank", class = "btn btn-primary"),
+          tags$a("Ouvrir le concordancier dans un nouvel onglet", href = explor_url, target = "_blank", class = "btn btn-primary"),
           modalButton("Fermer")
         ),
         tabsetPanel(
@@ -1012,7 +1021,17 @@ server <- function(input, output, session) {
             )
           ),
           tabPanel(
-            "Exploration HTML",
+            "Nuage de mots",
+            tags$br(),
+            uiOutput("ui_explor_wordclouds")
+          ),
+          tabPanel(
+            "Cooccurrences",
+            tags$br(),
+            uiOutput("ui_explor_coocs")
+          ),
+          tabPanel(
+            "Concordancier",
             tags$br(),
             tags$iframe(src = explor_url, style = "width: 100%; height: 78vh; border: 0;")
           )
@@ -1040,20 +1059,22 @@ server <- function(input, output, session) {
   })
 
   output$plot_chd <- renderPlot({
-    if (is.null(rv$res)) {
+    if (is.null(rv$res_chd)) {
       plot.new()
       text(0.5, 0.5, "CHD non disponible. Lance une analyse.", cex = 1.1)
       return(invisible(NULL))
     }
 
     k_val <- ifelse(is.null(input$explor_chd_k), 5L, as.integer(input$explor_chd_k))
+    k_max <- tryCatch(max(as.integer(rv$res_chd$group), na.rm = TRUE), error = function(e) NA_integer_)
+    if (is.finite(k_max) && !is.na(k_max)) k_val <- max(2L, min(k_val, as.integer(k_max)))
     measure_val <- ifelse(is.null(input$explor_chd_measure), "chi2", as.character(input$explor_chd_measure))
     n_terms_val <- ifelse(is.null(input$explor_chd_n_terms), 15L, as.integer(input$explor_chd_n_terms))
     show_negative_val <- isTRUE(input$explor_chd_show_negative)
     text_size_val <- ifelse(is.null(input$explor_chd_text_size), 1, as.numeric(input$explor_chd_text_size))
 
     args_plot <- list(
-      x = rv$res,
+      x = rv$res_chd,
       k = k_val,
       measure = measure_val,
       n_terms = n_terms_val,
@@ -1075,13 +1096,49 @@ server <- function(input, output, session) {
       do.call(rainette_plot, args_plot)
     }, error = function(e) {
       tryCatch({
-        rainette_plot(rv$res)
+        rainette_plot(rv$res_chd)
       }, error = function(e2) {
         plot.new()
         text(0.5, 0.55, "Impossible d'afficher la CHD dans l'application.", cex = 1.0)
         text(0.5, 0.45, paste0("Erreur : ", e2$message), cex = 0.9)
       })
     })
+  })
+
+  output$ui_explor_wordclouds <- renderUI({
+    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$wordclouds) || nrow(rv$explor_assets$wordclouds) == 0) {
+      return(tags$p("Aucun nuage de mots disponible."))
+    }
+
+    items <- lapply(seq_len(nrow(rv$explor_assets$wordclouds)), function(i) {
+      cl <- as.character(rv$explor_assets$wordclouds$classe[i])
+      src <- as.character(rv$explor_assets$wordclouds$src[i])
+      tags$div(
+        style = "margin-bottom: 20px;",
+        tags$h4(paste0("Classe ", cl)),
+        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
+      )
+    })
+
+    do.call(tagList, items)
+  })
+
+  output$ui_explor_coocs <- renderUI({
+    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$coocs) || nrow(rv$explor_assets$coocs) == 0) {
+      return(tags$p("Aucune cooccurrence disponible."))
+    }
+
+    items <- lapply(seq_len(nrow(rv$explor_assets$coocs)), function(i) {
+      cl <- as.character(rv$explor_assets$coocs$classe[i])
+      src <- as.character(rv$explor_assets$coocs$src[i])
+      tags$div(
+        style = "margin-bottom: 20px;",
+        tags$h4(paste0("Classe ", cl)),
+        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
+      )
+    })
+
+    do.call(tagList, items)
   })
 
   output$plot_afc <- renderPlot({
