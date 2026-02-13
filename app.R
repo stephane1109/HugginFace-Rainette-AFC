@@ -247,8 +247,13 @@ supprimer_docs_vides_dfm <- function(dfm_obj, corpus_aligne, tok_aligne, rv) {
 }
 
 
-calculer_k_effectif <- function(dfm_obj, k_demande, min_split_members, rv = NULL) {
+verifier_k_compatible <- function(dfm_obj, k_demande, min_split_members) {
   n_docs <- ndoc(dfm_obj)
+
+  if (!is.finite(k_demande) || is.na(k_demande) || k_demande < 2) {
+    stop("Le paramètre k doit être un entier >= 2.")
+  }
+
   if (!is.finite(min_split_members) || is.na(min_split_members) || min_split_members < 1) {
     min_split_members <- 1
   }
@@ -257,28 +262,17 @@ calculer_k_effectif <- function(dfm_obj, k_demande, min_split_members, rv = NULL
   if (!is.finite(k_max_theorique) || is.na(k_max_theorique)) k_max_theorique <- n_docs
   k_max_theorique <- max(1, min(k_max_theorique, n_docs - 1))
 
-  k_effectif <- min(k_demande, k_max_theorique)
-
-  if (k_effectif < 2) {
+  if (k_demande > k_max_theorique) {
     stop(
-      "Paramètres incompatibles : min_split_members=", min_split_members,
-      " est trop élevé pour ", n_docs,
-      " segments. Réduis min_split_members ou augmente la taille du corpus segmenté."
+      "Paramètres incompatibles : k=", k_demande,
+      " dépasse le maximum théorique ", k_max_theorique,
+      " avec min_split_members=", min_split_members,
+      " et ", n_docs, " segments. ",
+      "Réduis k ou min_split_members, ou augmente la taille du corpus segmenté."
     )
   }
 
-  if (!is.null(rv) && k_effectif < k_demande) {
-    ajouter_log(
-      rv,
-      paste0(
-        "k ajusté automatiquement de ", k_demande, " à ", k_effectif,
-        " pour respecter min_split_members=", min_split_members,
-        " (", n_docs, " segments disponibles)."
-      )
-    )
-  }
-
-  k_effectif
+  invisible(TRUE)
 }
 
 verifier_dfm_avant_rainette <- function(dfm_obj, input) {
@@ -854,7 +848,9 @@ server <- function(input, output, session) {
           rv$res_type <- "simple"
           ajouter_log(rv, "Mode : classification simple (rainette).")
 
-          k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
+          verifier_k_compatible(dfm_obj, input$k, input$min_split_members)
+
+          k_effectif <- input$k
 
           res <- rainette(
             dfm_obj,
@@ -878,7 +874,9 @@ server <- function(input, output, session) {
           rv$res_type <- "double"
           ajouter_log(rv, "Mode : classification double (rainette2).")
 
-          k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
+          verifier_k_compatible(dfm_obj, input$k, input$min_split_members)
+
+          k_effectif <- input$k
 
           res1 <- rainette(dfm_obj, k = k_effectif, min_segment_size = input$min_segment_size, min_split_members = input$min_split_members, doc_id = "segment_source")
           if (is.null(res1) || is.null(res1$group) || length(res1$group) == 0) stop("Classification 1 (rainette) impossible.")
