@@ -75,6 +75,8 @@ ui <- fluidPage(
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
+      checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
+      checkboxInput("spacy_retirer_stopwords", "Retirer les stopwords (après spaCy, côté R)", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
@@ -100,9 +102,7 @@ ui <- fluidPage(
           selected = c("NOUN", "VERB"),
           multiple = TRUE,
           options = list(plugins = list("remove_button"))
-        ),
-        checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
-        checkboxInput("spacy_retirer_stopwords", "Retirer les stopwords (après spaCy, côté R)", value = FALSE)
+        )
       ),
 
       tags$hr(),
