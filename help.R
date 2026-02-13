@@ -38,7 +38,7 @@ ui_aide_huggingface <- function() {
     tags$p(tags$b("segment_size"), " : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs."),
     tags$p(tags$b("k (nombre de classes)"), " : nombre de classes demandé pour la CHD."),
     tags$p(tags$b("min_segment_size"), " : nombre minimal de termes par segment. En effet, lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, nos segments peuvent donc varier en taille (entendue comme le nombre de termes encore présents). Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document (si possible) jusqu'à atteindre la taille minimale souhaitée."),
-    tags$p(tags$b("min_split_members"), " : nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification."),
+    tags$p(tags$b("min_split_members"), " : nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification. Si cette contrainte est incompatible avec k, l'application réduit automatiquement k et l'indique dans les logs."),
     tags$p(tags$b("dfm_trim min_docfreq"), " : fréquence minimale en nombre de segments pour conserver un terme dans le DFM. Plus haut enlève les termes rares."),
     tags$p(tags$b("max_p (p-value)"), " : seuil de p-value pour filtrer les termes mis en avant dans les statistiques et le surlignage HTML."),
     tags$p(tags$b("top_n (wordcloud)"), " : nombre de termes affichés dans chaque nuage de mots."),
