@@ -25,6 +25,9 @@ ui_aide_huggingface <- function() {
     tags$p(tags$b("window (cooccurrences)"), " : taille de la fenêtre glissante pour calculer les cooccurrences."),
     tags$p(tags$b("top_feat (cooccurrences)"), " : nombre de termes retenus pour construire le réseau de cooccurrences."),
 
+    tags$h3("Classification double (rainette2)"),
+    tags$p(tags$b("Classification double"), " : l’application combine deux classifications rainette (res1 et res2) via rainette2, puis découpe l’arbre final avec k."),
+
     tags$h3("Lemmatisation (option)"),
     tags$p(tags$b("Lemmatisation"), " : si activée, le texte est analysé avec UDPipe puis remplacé par une suite de lemmes."),
     tags$p(tags$b("Tokens à conserver"), " : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD."),
