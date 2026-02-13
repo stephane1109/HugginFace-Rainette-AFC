@@ -963,6 +963,7 @@ server <- function(input, output, session) {
                 words = df_stats_cl$Terme,
                 freq = df_stats_cl$chi2,
                 scale = c(10, 0.5),
+                min.freq = 0,
                 max.words = nrow(df_stats_cl),
                 colors = brewer.pal(8, "Dark2")
               ))
@@ -1168,7 +1169,13 @@ server <- function(input, output, session) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
 
-    tags$img(src = paste0("/", rv$exports_prefix, "/", src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    tags$div(
+      style = "text-align: center;",
+      tags$img(
+        src = paste0("/", rv$exports_prefix, "/", src_rel),
+        style = "max-width: 100%; height: auto; border: 1px solid #999; display: inline-block;"
+      )
+    )
   })
 
   output$ui_cooc <- renderUI({
