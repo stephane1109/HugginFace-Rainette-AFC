@@ -170,8 +170,8 @@ ui <- fluidPage(
           tags$h4("AFC des termes"),
           tags$p("Les mots sont colorés selon la classe où ils sont le plus surreprésentés (résidus standardisés) et leur taille est proportionnelle à leur fréquence globale ou chi2 (selon le choix)."),
           plotOutput("plot_afc", height = "720px"),
-          tags$h4("Table des mots projetés (fréquence, chi2, p-value)"),
-          uiOutput("ui_table_afc_mots_par_classe"),
+          tags$h4("Table des mots projetés (fréquence, chi2, p-value, segment exemple)"),
+          tableOutput("table_afc_mots"),
 
           tags$h4("AFC des variables étoilées"),
           plotOutput("plot_afc_vars", height = "720px"),

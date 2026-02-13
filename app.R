@@ -63,6 +63,39 @@ normaliser_classes <- function(x) {
   y
 }
 
+construire_segments_exemples_afc <- function(termes_stats, dfm_obj, corpus_obj, max_chars = 220) {
+  if (is.null(termes_stats) || nrow(termes_stats) == 0 || is.null(dfm_obj) || is.null(corpus_obj)) return(termes_stats)
+  if (!all(c("Terme", "Classe_max") %in% names(termes_stats))) return(termes_stats)
+
+  classes_docs <- normaliser_classes(docvars(corpus_obj)$Classes)
+  textes <- as.character(corpus_obj)
+
+  if (length(classes_docs) != ndoc(dfm_obj) || length(textes) != ndoc(dfm_obj)) return(termes_stats)
+
+  mat <- as.matrix(dfm_obj)
+  termes_stats$Segment_texte <- NA_character_
+
+  for (i in seq_len(nrow(termes_stats))) {
+    terme <- as.character(termes_stats$Terme[i])
+    classe_num <- suppressWarnings(as.numeric(gsub("^Classe\\s+", "", as.character(termes_stats$Classe_max[i]))))
+
+    if (is.na(classe_num) || !nzchar(terme) || !(terme %in% colnames(mat))) next
+
+    idx <- which(classes_docs == as.character(classe_num) & mat[, terme] > 0)
+    if (length(idx) == 0) next
+
+    # Segment le plus représentatif pour le terme dans la classe (fréquence max du terme)
+    i_best <- idx[which.max(mat[idx, terme])]
+    seg <- gsub("\\s+", " ", trimws(textes[i_best]), perl = TRUE)
+    if (!nzchar(seg)) next
+    if (nchar(seg) > max_chars) seg <- paste0(substr(seg, 1, max_chars - 1), "…")
+
+    termes_stats$Segment_texte[i] <- seg
+  }
+
+  termes_stats
+}
+
 extraire_classes_alignees <- function(corpus_obj, doc_ids, nom_colonne = "Classes") {
   dv <- docvars(corpus_obj)
   if (!(nom_colonne %in% names(dv))) return(rep(NA_character_, length(doc_ids)))
@@ -892,6 +925,12 @@ server <- function(input, output, session) {
             obj$termes_stats <- df_m
           }
 
+          obj$termes_stats <- construire_segments_exemples_afc(
+            termes_stats = obj$termes_stats,
+            dfm_obj = dfm_ok,
+            corpus_obj = filtered_corpus_ok
+          )
+
           rv$afc_obj <- obj
           ajouter_log(rv, "AFC classes × termes : calcul terminé.")
 
@@ -1305,11 +1344,14 @@ server <- function(input, output, session) {
     }
 
     df <- rv$afc_table_mots
-    if (!all(c("Terme", "Classe_max") %in% names(df))) {
-      output$table_afc_mots_message <- renderTable({
-        data.frame(Message = "AFC mots : colonnes manquantes pour le regroupement par classe.", stringsAsFactors = FALSE)
-      }, rownames = FALSE)
-      return(tableOutput("table_afc_mots_message"))
+    colonnes <- intersect(c("Terme", "Classe_max", "frequency", "chi2", "p_value", "Segment_texte"), names(df))
+    df <- df[, colonnes, drop = FALSE]
+    if ("p_value" %in% names(df)) {
+      df$p_value <- ifelse(
+        is.na(df$p_value),
+        NA_character_,
+        formatC(df$p_value, format = "f", digits = 6)
+      )
     }
 
     classes <- unique(as.character(df$Classe_max))
