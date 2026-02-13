@@ -781,7 +781,7 @@ server <- function(input, output, session) {
               "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
               ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
-              " | stopwords_apres_spacy(R)=", ifelse(retirer_stopwords_spacy, "1", "0")
+              " | stopwords_spacy(tok.is_stop)=", ifelse(retirer_stopwords_spacy, "1", "0")
             )
           )
 
@@ -793,7 +793,7 @@ server <- function(input, output, session) {
             textes = unname(textes_chd),
             pos_a_conserver = pos_a_conserver,
             utiliser_lemmes = utiliser_lemmes,
-            retirer_stopwords = FALSE,
+            retirer_stopwords = retirer_stopwords_spacy,
             lower_input = isTRUE(input$forcer_minuscules_avant),
             rv = rv
           )
@@ -809,7 +809,7 @@ server <- function(input, output, session) {
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
-            retirer_stopwords = retirer_stopwords_spacy,
+            retirer_stopwords = FALSE,
             rv = rv,
             libelle = "spaCy"
           )
