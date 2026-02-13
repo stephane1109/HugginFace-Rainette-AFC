@@ -76,7 +76,7 @@ ui <- fluidPage(
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
-      checkboxInput("spacy_retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
+      checkboxInput("spacy_retirer_stopwords", "Retirer les stopwords via spaCy (tok.is_stop)", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
