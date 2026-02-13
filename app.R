@@ -851,24 +851,10 @@ server <- function(input, output, session) {
         textes_index_ok <- rv$textes_indexation[docnames(dfm_ok)]
         names(textes_index_ok) <- docnames(dfm_ok)
 
-        explor_dir <- file.path(rv$export_dir, "explor")
-        dir.create(explor_dir, showWarnings = FALSE, recursive = TRUE)
-
-        explor_assets <- list(
-          chd = NULL,
-          wordclouds = data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE),
-          coocs = data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
-        )
-
-        chd_png <- file.path(explor_dir, "chd.png")
-        try({
-          png(chd_png, width = 2000, height = 1500, res = 180)
-          rainette_plot(rv$res_chd)
-          dev.off()
-          if (file.exists(chd_png)) explor_assets$chd <- file.path("explor", basename(chd_png))
-        }, silent = TRUE)
-
-        rv$explor_assets <- explor_assets
+        wordcloud_dir <- file.path(rv$export_dir, "wordclouds")
+        dir.create(wordcloud_dir, showWarnings = FALSE, recursive = TRUE)
+        cooc_dir <- file.path(rv$export_dir, "cooccurrences")
+        dir.create(cooc_dir, showWarnings = FALSE, recursive = TRUE)
 
         classes_uniques <- sort(unique(as.integer(docvars(filtered_corpus_ok)$Classes)))
 
@@ -878,82 +864,53 @@ server <- function(input, output, session) {
             df_stats_cl <- df_stats_cl[order(-df_stats_cl$chi2), , drop = FALSE]
             df_stats_cl <- head(df_stats_cl, max(5, as.integer(input$top_n)))
 
-            wc_png <- file.path(explor_dir, paste0("wordcloud_classe_", cl, ".png"))
+            wc_png <- file.path(wordcloud_dir, paste0("cluster_", cl, "_wordcloud.png"))
             try({
-              png(wc_png, width = 1800, height = 1300, res = 180)
+              png(wc_png, width = 800, height = 600)
               suppressWarnings(wordcloud(
                 words = df_stats_cl$Terme,
-                freq = pmax(df_stats_cl$chi2, 0.0001),
-                min.freq = 0,
+                freq = df_stats_cl$chi2,
+                scale = c(10, 0.5),
                 max.words = nrow(df_stats_cl),
-                random.order = FALSE,
-                rot.per = 0.15,
                 colors = brewer.pal(8, "Dark2")
               ))
               dev.off()
-              if (file.exists(wc_png)) {
-                explor_assets$wordclouds <- rbind(
-                  explor_assets$wordclouds,
-                  data.frame(classe = as.character(cl), src = file.path("explor", basename(wc_png)), stringsAsFactors = FALSE)
-                )
-              }
             }, silent = TRUE)
           }
 
           tok_cl <- tok_ok[docvars(filtered_corpus_ok)$Classes == cl]
-          cooc_png <- file.path(explor_dir, paste0("cooc_classe_", cl, ".png"))
+          cooc_png <- file.path(cooc_dir, paste0("cluster_", cl, "_fcm_network.png"))
 
           try({
-            if (length(tok_cl) > 1) {
-              dfm_cl <- dfm(tok_cl)
-              if (nfeat(dfm_cl) > 1) {
-                top_feat <- max(5, as.integer(input$top_feat))
-                freq_cl <- Matrix::colSums(dfm_cl)
-                feat_sel <- names(sort(freq_cl, decreasing = TRUE))[seq_len(min(top_feat, length(freq_cl)))]
-                fcm_cl <- fcm(tok_cl, context = "window", window = max(1, as.integer(input$window_cooc)), tri = FALSE)
-                fcm_cl <- fcm_select(fcm_cl, pattern = feat_sel)
+            if (length(tok_cl) > 0) {
+              fcm_cl <- fcm(tok_cl, context = "window", window = max(1, as.integer(input$window_cooc)), tri = FALSE)
+              term_freq <- sort(colSums(fcm_cl), decreasing = TRUE)
+              feat_sel <- names(term_freq)[seq_len(min(max(5, as.integer(input$top_feat)), length(term_freq)))]
+              fcm_cl <- fcm_select(fcm_cl, feat_sel, selection = "keep")
 
-                mat <- as.matrix(fcm_cl)
-                diag(mat) <- 0
-                mat[mat < 0] <- 0
+              adj <- as.matrix(fcm_cl)
+              g <- graph_from_adjacency_matrix(adj, mode = "undirected", weighted = TRUE, diag = FALSE)
 
-                if (sum(mat) > 0) {
-                  g <- construire_graphe_adjacence(mat)
-                  g <- igraph::delete_vertices(g, igraph::degree(g) == 0)
+              num_nodes <- length(V(g))
+              palette_colors <- brewer.pal(min(8, num_nodes), "Set3")
+              V(g)$color <- palette_colors[seq_along(V(g))]
 
-                  if (igraph::vcount(g) > 1) {
-                    png(cooc_png, width = 1800, height = 1300, res = 180)
-                    w <- igraph::E(g)$weight
-                    if (length(w) == 0) {
-                      w_plot <- numeric(0)
-                    } else if (max(w) == min(w)) {
-                      w_plot <- rep(2.5, length(w))
-                    } else {
-                      w_plot <- 1 + (w - min(w)) * (6 - 1) / (max(w) - min(w))
-                    }
-                    plot(
-                      g,
-                      vertex.label = igraph::V(g)$name,
-                      vertex.size = 14,
-                      vertex.label.cex = 0.85,
-                      edge.width = w_plot,
-                      layout = igraph::layout_with_fr(g)
-                    )
-                    dev.off()
-                    if (file.exists(cooc_png)) {
-                      explor_assets$coocs <- rbind(
-                        explor_assets$coocs,
-                        data.frame(classe = as.character(cl), src = file.path("explor", basename(cooc_png)), stringsAsFactors = FALSE)
-                      )
-                    }
-                  }
-                }
-              }
+              png(cooc_png, width = 1600, height = 1200)
+              plot(
+                g,
+                layout = layout_with_fr(g),
+                main = paste("Cooccurrences - Classe", cl),
+                vertex.size = 16,
+                vertex.color = V(g)$color,
+                vertex.label = V(g)$name,
+                vertex.label.cex = 1,
+                edge.width = E(g)$weight / 2,
+                edge.color = "gray80"
+              )
+              dev.off()
             }
           }, silent = TRUE)
         }
-
-        rv$explor_assets <- explor_assets
 
         args_concordancier <- list(
           chemin_sortie = html_file,
@@ -965,13 +922,6 @@ server <- function(input, output, session) {
           avancer = avancer,
           rv = rv
         )
-
-        fml <- tryCatch(names(formals(generer_concordancier_html)), error = function(e) character(0))
-        if ("explor_assets" %in% fml) {
-          args_concordancier$explor_assets <- explor_assets
-        } else {
-          ajouter_log(rv, "Concordancier : argument explor_assets indisponible (version de fonction plus ancienne).")
-        }
 
         do.call(generer_concordancier_html, args_concordancier)
 
@@ -1016,11 +966,6 @@ server <- function(input, output, session) {
       shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
     }
 
-    chd_ok <- generer_chd_explor_si_absente(rv)
-    if (!isTRUE(chd_ok)) {
-      ajouter_log(rv, "Exploration : CHD non disponible (image non générée).")
-    }
-
     classe_defaut <- as.character(rv$clusters[1])
 
     showModal(modalDialog(
@@ -1033,8 +978,35 @@ server <- function(input, output, session) {
 
       tabsetPanel(
         tabPanel(
-          "CHD",
-          uiOutput("ui_explor_chd")
+          "CHD (rainette_plot)",
+          fluidRow(
+            column(
+              4,
+              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = rv$max_n_groups, value = min(rv$max_n_groups, 8), step = 1),
+              selectInput(
+                "measure_plot", "Statistiques",
+                choices = c(
+                  "Keyness - Chi-squared" = "chi2",
+                  "Keyness - Likelihood ratio" = "lr",
+                  "Frequency - Terms" = "frequency",
+                  "Frequency - Documents proportion" = "docprop"
+                ),
+                selected = "chi2"
+              ),
+              selectInput("type_plot", "Type", choices = c("bar", "cloud"), selected = "bar"),
+              numericInput("n_terms_plot", "Nombre de termes", value = 20, min = 5, max = 200, step = 1),
+              conditionalPanel(
+                "input.measure_plot != 'docprop'",
+                checkboxInput("same_scales_plot", "Forcer les mêmes échelles", value = TRUE)
+              ),
+              checkboxInput("show_negative_plot", "Afficher les valeurs négatives", value = FALSE),
+              numericInput("text_size_plot", "Taille du texte", value = 12, min = 6, max = 30, step = 1)
+            ),
+            column(
+              8,
+              plotOutput("plot_chd", height = "70vh")
+            )
+          )
         ),
         tabPanel(
           "Concordancier HTML",
@@ -1073,21 +1045,33 @@ server <- function(input, output, session) {
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
   })
 
-  output$ui_explor_chd <- renderUI({
-    req(rv$exports_prefix, rv$export_dir)
+  output$plot_chd <- renderPlot({
+    req(rv$res_chd, rv$dfm)
+    req(!is.null(input$k_plot))
+    req(!is.null(input$measure_plot))
+    req(!is.null(input$type_plot))
+    req(!is.null(input$n_terms_plot))
 
-    src_rel <- file.path("explor", "chd.png")
-    if (!file.exists(file.path(rv$export_dir, src_rel))) {
-      return(tags$p("CHD non disponible dans l'exploration. Relance une analyse."))
-    }
+    same_scales <- isTRUE(input$same_scales_plot)
+    show_negative <- isTRUE(input$show_negative_plot)
 
-    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    rainette_plot(
+      rv$res_chd,
+      rv$dfm,
+      k = input$k_plot,
+      type = input$type_plot,
+      n_terms = input$n_terms_plot,
+      free_scales = !same_scales,
+      measure = input$measure_plot,
+      show_negative = show_negative,
+      text_size = input$text_size_plot
+    )
   })
 
   output$ui_wordcloud <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("explor", paste0("wordcloud_classe_", input$classe_viz, ".png"))
+    src_rel <- file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png"))
     if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
@@ -1098,7 +1082,7 @@ server <- function(input, output, session) {
   output$ui_cooc <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    src_rel <- file.path("explor", paste0("cooc_classe_", input$classe_viz, ".png"))
+    src_rel <- file.path("cooccurrences", paste0("cluster_", input$classe_viz, "_fcm_network.png"))
     if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucune cooccurrence disponible pour cette classe."))
     }
