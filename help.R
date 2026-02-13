@@ -12,7 +12,7 @@
 # install.packages("htmltools")
 
 ###############################################################################
-#               Script CHD + Extraction STATS et Affichage CHD                #
+#                    Script CHD - version 13-02-2026                          #
 #      A partir d'un corpus texte formaté aux exigences IRAMUTEQ              #
 #                                                                             #
 #      1.Réalise la CHD sur le corpus, sans rainette_explor                   #
