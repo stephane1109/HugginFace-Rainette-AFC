@@ -44,7 +44,10 @@ def main() -> int:
     parser.add_argument("--input", required=True, help="Chemin TSV d'entrée (doc_id, text).")
     parser.add_argument("--output", required=True, help="Chemin TSV de sortie.")
     parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
+    parser.add_argument("--retirer_stopwords", default="1", help="1 pour ignorer les entités constituées uniquement de stopwords spaCy.")
     args = parser.parse_args()
+
+    retirer_stopwords = str(args.retirer_stopwords).strip() == "1"
 
     try:
         nlp = spacy.load(args.modele)
@@ -71,6 +74,13 @@ def main() -> int:
                 txt = (ent.text or "").strip()
                 if not txt:
                     continue
+
+                if retirer_stopwords:
+                    ent_doc = nlp.make_doc(txt)
+                    tok_alpha = [t for t in ent_doc if not t.is_space and not t.is_punct]
+                    if tok_alpha and all(t.is_stop for t in tok_alpha):
+                        continue
+
                 lignes.append(
                     {
                         "doc_id": did,
