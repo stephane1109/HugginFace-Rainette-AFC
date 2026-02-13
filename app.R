@@ -1043,13 +1043,8 @@ server <- function(input, output, session) {
   output$ui_explor_chd <- renderUI({
     req(rv$exports_prefix, rv$export_dir)
 
-    candidats <- c(
-      file.path("explor", "chd.png"),
-      "chd.png"
-    )
-    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
-
-    if (is.na(src_rel) || !nzchar(src_rel)) {
+    src_rel <- file.path("explor", "chd.png")
+    if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("CHD non disponible dans l'exploration. Relance une analyse."))
     }
 
@@ -1059,13 +1054,8 @@ server <- function(input, output, session) {
   output$ui_wordcloud <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    candidats <- c(
-      file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png")),
-      file.path("explor", paste0("wordcloud_classe_", input$classe_viz, ".png"))
-    )
-    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
-
-    if (is.na(src_rel) || !nzchar(src_rel)) {
+    src_rel <- file.path("explor", paste0("wordcloud_classe_", input$classe_viz, ".png"))
+    if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
 
@@ -1075,13 +1065,8 @@ server <- function(input, output, session) {
   output$ui_cooc <- renderUI({
     req(input$classe_viz, rv$exports_prefix, rv$export_dir)
 
-    candidats <- c(
-      file.path("cooccurrences", paste0("cluster_", input$classe_viz, "_fcm_network.png")),
-      file.path("explor", paste0("cooc_classe_", input$classe_viz, ".png"))
-    )
-    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
-
-    if (is.na(src_rel) || !nzchar(src_rel)) {
+    src_rel <- file.path("explor", paste0("cooc_classe_", input$classe_viz, ".png"))
+    if (!file.exists(file.path(rv$export_dir, src_rel))) {
       return(tags$p("Aucune cooccurrence disponible pour cette classe."))
     }
 
