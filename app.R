@@ -1076,7 +1076,7 @@ server <- function(input, output, session) {
       return(tags$p("Aucun nuage de mots disponible pour cette classe."))
     }
 
-    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    tags$img(src = paste0("/", rv$exports_prefix, "/", src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
   })
 
   output$ui_cooc <- renderUI({
@@ -1087,7 +1087,7 @@ server <- function(input, output, session) {
       return(tags$p("Aucune cooccurrence disponible pour cette classe."))
     }
 
-    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    tags$img(src = paste0("/", rv$exports_prefix, "/", src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
   })
 
   output$table_stats_classe <- renderTable({
