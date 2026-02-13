@@ -348,7 +348,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   list(textes = res[ids], tokens_df = df_tok)
 }
 
-executer_spacy_ner <- function(ids, textes, rv) {
+executer_spacy_ner <- function(ids, textes, rv, retirer_stopwords = TRUE) {
   script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : ner.py (à la racine du projet).")
 
@@ -364,7 +364,13 @@ executer_spacy_ner <- function(ids, textes, rv) {
     row.names = FALSE, col.names = TRUE, fileEncoding = "UTF-8"
   )
 
-  args <- c(script_ner, "--input", in_tsv, "--output", out_tsv, "--modele", "fr_core_news_md")
+  args <- c(
+    script_ner,
+    "--input", in_tsv,
+    "--output", out_tsv,
+    "--modele", "fr_core_news_md",
+    "--retirer_stopwords", ifelse(isTRUE(retirer_stopwords), "1", "0")
+  )
 
   ajouter_log(rv, paste0("NER : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
 
@@ -749,7 +755,7 @@ server <- function(input, output, session) {
         filtrage_morpho <- isTRUE(input$filtrage_morpho)
         utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
         retirer_stopwords_spacy <- isTRUE(input$spacy_retirer_stopwords)
-        utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes || retirer_stopwords_spacy
+        utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes
 
         if (!utiliser_pipeline_spacy) {
 
@@ -781,7 +787,7 @@ server <- function(input, output, session) {
               "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
               ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
-              " | stopwords_spacy(tok.is_stop)=", ifelse(retirer_stopwords_spacy, "1", "0")
+              " | stopwords_spacy(tok.is_stop)=0 (CHD: stopwords Quanteda uniquement)"
             )
           )
 
@@ -793,7 +799,7 @@ server <- function(input, output, session) {
             textes = unname(textes_chd),
             pos_a_conserver = pos_a_conserver,
             utiliser_lemmes = utiliser_lemmes,
-            retirer_stopwords = retirer_stopwords_spacy,
+            retirer_stopwords = FALSE,
             lower_input = isTRUE(input$forcer_minuscules_avant),
             rv = rv
           )
@@ -914,7 +920,12 @@ server <- function(input, output, session) {
           textes_ner <- as.character(filtered_corpus_ok)
           rv$ner_nb_segments <- length(textes_ner)
 
-          df_ent <- executer_spacy_ner(ids_ner, textes_ner, rv)
+          df_ent <- executer_spacy_ner(
+            ids_ner,
+            textes_ner,
+            rv,
+            retirer_stopwords = retirer_stopwords_spacy
+          )
 
           classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)
           names(classes_vec) <- ids_ner
