@@ -1007,6 +1007,11 @@ server <- function(input, output, session) {
         stop("Fichier explorateur introuvable. Relance l'analyse.")
       }
 
+      dn <- docnames(rv$dfm)
+      if (is.null(dn) || length(dn) == 0) {
+        stop("DFM vide : impossible d'ouvrir l'explorateur.")
+      }
+
       dtm_aligne <- rv$dfm[dn, ]
       corpus_aligne <- rv$filtered_corpus[dn]
       textes_alignes <- as.character(quanteda::texts(corpus_aligne))
