@@ -1371,7 +1371,7 @@ server <- function(input, output, session) {
 
       output[[id]] <- renderTable({
         sous_df <- df[df$Classe_max == cl, , drop = FALSE]
-        colonnes <- intersect(c("Terme", "frequency", "chi2", "p_value"), names(sous_df))
+        colonnes <- intersect(c("Terme", "frequency", "chi2", "p_value", "Segment_texte"), names(sous_df))
         sous_df <- sous_df[, colonnes, drop = FALSE]
 
         if ("p_value" %in% names(sous_df)) {
