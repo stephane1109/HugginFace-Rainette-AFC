@@ -968,89 +968,58 @@ server <- function(input, output, session) {
 
   observeEvent(input$explor, {
     tryCatch({
-      ancien_viewer <- getOption("shinygadgets.viewer")
-      ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
-      on.exit({
-        options(shinygadgets.viewer = ancien_viewer)
-        options(shinygadgets.defaultViewer = ancien_default_viewer)
-      }, add = TRUE)
-
-      viewer_popup <- function(url) {
-        if (is.null(url) || !nzchar(url)) {
-          showNotification("URL explorateur invalide.", type = "error", duration = 8)
-          return(invisible(NULL))
-        }
-
-        showModal(modalDialog(
-          title = "Explorateur Rainette (UI native)",
-          size = "l",
-          easyClose = TRUE,
-          footer = tagList(
-            tags$a("Ouvrir dans un nouvel onglet", href = url, target = "_blank", class = "btn btn-primary"),
-            modalButton("Fermer")
-          ),
-          tags$iframe(
-            src = url,
-            style = "width: 100%; height: 80vh; border: 0;"
-          )
-        ))
-
-        invisible(NULL)
+      if (is.null(rv$res)) {
+        stop("CHD non disponible. Lance une analyse avant d'ouvrir l'exploration.")
       }
-
-      options(
-        shinygadgets.viewer = viewer_popup,
-        shinygadgets.defaultViewer = viewer_popup
-      )
-
-      if (!file.exists(rv$html_file)) {
+      if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
         stop("Fichier explorateur introuvable. Relance l'analyse.")
       }
-
-      dn <- docnames(rv$dfm)
-      if (is.null(dn) || length(dn) == 0) {
-        stop("DFM vide : impossible d'ouvrir l'explorateur.")
+      if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
+        stop("Préfixe d'export invalide.")
+      }
+      if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+        shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
       }
 
-      dtm_aligne <- rv$dfm[dn, ]
-      corpus_aligne <- rv$filtered_corpus[dn]
-      textes_alignes <- as.character(quanteda::texts(corpus_aligne))
+      explor_url <- file.path("/", rv$exports_prefix, basename(rv$html_file))
 
-      appel_ok <- FALSE
-      erreurs <- character(0)
-
-      essais <- list(
-        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, corpus = corpus_aligne),
-        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
-        function() rainette::rainette_explor(rv$res, dtm_aligne, corpus_aligne),
-        function() rainette::rainette_explor(rv$res, dtm_aligne, textes_alignes)
-      )
-
-      for (f in essais) {
-        essai <- tryCatch({
-          f()
-          TRUE
-        }, error = function(e) {
-          msg <- conditionMessage(e)
-          erreurs <<- c(erreurs, msg)
-          ajouter_log(rv, paste0("Explorateur rainette_explor (tentative) : ", msg))
-          FALSE
-        })
-
-        if (isTRUE(essai)) {
-          appel_ok <- TRUE
-          break
-        }
-      }
-
-      if (!appel_ok) {
-        stop(
-          "Impossible d'ouvrir l'UI native rainette_explor avec cette version/configuration. ",
-          if (length(erreurs) > 0) paste0("Dernière erreur : ", tail(erreurs, 1)) else ""
+      showModal(modalDialog(
+        title = "Exploration",
+        size = "l",
+        easyClose = TRUE,
+        footer = tagList(
+          tags$a("Ouvrir l'exploration HTML dans un nouvel onglet", href = explor_url, target = "_blank", class = "btn btn-primary"),
+          modalButton("Fermer")
+        ),
+        tabsetPanel(
+          tabPanel(
+            "CHD (rainette_plot)",
+            tags$br(),
+            uiOutput("ui_chd_statut"),
+            fluidRow(
+              column(
+                width = 4,
+                numericInput("explor_chd_k", "Nombre de classes à afficher (k)", value = 5, min = 2, step = 1),
+                selectInput("explor_chd_measure", "Mesure d'association", choices = c("chi2", "fisher", "hyper"), selected = "chi2"),
+                numericInput("explor_chd_n_terms", "Nombre de termes par classe", value = 15, min = 3, step = 1),
+                checkboxInput("explor_chd_show_negative", "Afficher aussi les termes négatifs", value = FALSE),
+                sliderInput("explor_chd_text_size", "Taille du texte", min = 0.6, max = 2, value = 1, step = 0.1)
+              ),
+              column(
+                width = 8,
+                plotOutput("plot_chd", height = "78vh")
+              )
+            )
+          ),
+          tabPanel(
+            "Exploration HTML",
+            tags$br(),
+            tags$iframe(src = explor_url, style = "width: 100%; height: 78vh; border: 0;")
+          )
         )
-      }
+      ))
     }, error = function(e) {
-      msg <- paste0("Explorateur : ", e$message)
+      msg <- paste0("Exploration : ", e$message)
       ajouter_log(rv, msg)
       showNotification(msg, type = "error", duration = 8)
     })
@@ -1077,12 +1046,41 @@ server <- function(input, output, session) {
       return(invisible(NULL))
     }
 
+    k_val <- ifelse(is.null(input$explor_chd_k), 5L, as.integer(input$explor_chd_k))
+    measure_val <- ifelse(is.null(input$explor_chd_measure), "chi2", as.character(input$explor_chd_measure))
+    n_terms_val <- ifelse(is.null(input$explor_chd_n_terms), 15L, as.integer(input$explor_chd_n_terms))
+    show_negative_val <- isTRUE(input$explor_chd_show_negative)
+    text_size_val <- ifelse(is.null(input$explor_chd_text_size), 1, as.numeric(input$explor_chd_text_size))
+
+    args_plot <- list(
+      x = rv$res,
+      k = k_val,
+      measure = measure_val,
+      n_terms = n_terms_val,
+      show_negative = show_negative_val,
+      text_size = text_size_val
+    )
+
+    fml <- tryCatch(names(formals(rainette_plot)), error = function(e) character(0))
+    if (length(fml) > 0) {
+      keep <- names(args_plot) %in% fml
+      if (!("x" %in% fml) && ("res" %in% fml)) {
+        names(args_plot)[names(args_plot) == "x"] <- "res"
+        keep <- names(args_plot) %in% fml
+      }
+      args_plot <- args_plot[keep]
+    }
+
     tryCatch({
-      rainette_plot(rv$res)
+      do.call(rainette_plot, args_plot)
     }, error = function(e) {
-      plot.new()
-      text(0.5, 0.55, "Impossible d'afficher la CHD dans l'application.", cex = 1.0)
-      text(0.5, 0.45, paste0("Erreur : ", e$message), cex = 0.9)
+      tryCatch({
+        rainette_plot(rv$res)
+      }, error = function(e2) {
+        plot.new()
+        text(0.5, 0.55, "Impossible d'afficher la CHD dans l'application.", cex = 1.0)
+        text(0.5, 0.45, paste0("Erreur : ", e2$message), cex = 0.9)
+      })
     })
   })
 
