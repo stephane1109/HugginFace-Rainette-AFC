@@ -1,9 +1,6 @@
-# ------------------------------------------------------------
-# Aide intégrée
-# Doc Rainette : https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd
-
 ################################
 # # Rainette ## développé par Julien Barnier
+# Doc Rainette : https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd
 # https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html
 # https://juba.r-universe.dev/builds
 ################################
@@ -12,7 +9,7 @@
 # install.packages("htmltools")
 
 ###############################################################################
-#                    Script CHD - version 13-02-2026                          #
+#                    Script CHD - version beta 0.2 - 12-02-2026               #
 #      A partir d'un corpus texte formaté aux exigences IRAMUTEQ              #
 #                                                                             #
 #      1.Réalise la CHD sur le corpus, sans rainette_explor                   #
@@ -24,7 +21,6 @@
 #      7.Creation d'un concordancier au format html                           #
 #      8.Recherche de coocurrence                                             #
 ###############################################################################
-# ------------------------------------------------------------
 
 ui_aide_huggingface <- function() {
   tagList(
