@@ -1,6 +1,27 @@
 # ------------------------------------------------------------
 # Aide intégrée
 # Doc Rainette : https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd
+
+################################
+# # Rainette ## développé par Julien Barnier
+# https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html
+# https://juba.r-universe.dev/builds
+################################
+
+# install.packages(c("rainette", "quanteda", "wordcloud", "RColorBrewer", "igraph", "dplyr", "shiny"))
+# install.packages("htmltools")
+
+###############################################################################
+#               Script CHD + Extraction STATS et Affichage CHD                #
+#      A partir d'un corpus texte formaté aux exigences IRAMUTEQ              #
+#                                                                             #
+#      1.Réalise la CHD sur le corpus, sans rainette_explor                   #
+#      2.Extrait chi2, lr, freq, docprop dans un CSV                          #
+#      3.Génère nuages de mots et graphes de cooccurrences par classe         #
+#      4.Exporte les segments de texte par classe au format text              #
+#      5.Creation d'un concordancier au format html                           #
+#      6.Affichage de la CHD avec rainette_explor (navigateur)                #
+###############################################################################
 # ------------------------------------------------------------
 
 ui_aide_huggingface <- function() {
