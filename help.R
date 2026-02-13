@@ -49,12 +49,12 @@ ui_aide_huggingface <- function() {
     tags$p(tags$b("Classification double"), " : l’application combine deux classifications rainette (res1 et res2) via rainette2, puis découpe l’arbre final avec k."),
 
     tags$h3("Lemmatisation (option)"),
-    tags$p(tags$b("Lemmatisation"), " : si activée, le texte est analysé avec UDPipe puis remplacé par une suite de lemmes."),
+    tags$p(tags$b("Lemmatisation"), " : si activée, le texte est analysé avec Spacy."),
     tags$p(tags$b("Tokens à conserver"), " : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD."),
 
     tags$h3("Exploration"),
     tags$p(tags$b("Classe"), " : sélection de la classe pour afficher les images et la table de statistiques associées."),
-    tags$p(tags$b("CHD (rainette_plot)"), " : affichage graphique de la CHD dans l’application (sans lancer le gadget externe)."),
+    tags$p(tags$b("CHD (rainette_plot)"), " : affichage graphique de la CHD dans l’application."),
     tags$p(tags$b("Type"), " : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe."),
     tags$p(tags$b("Statistiques"), " : chi2, lr, frequency, docprop selon le critère utilisé pour classer les termes."),
     tags$p(tags$b("Nombre de termes"), " : nombre de termes affichés par classe dans la visualisation."),
