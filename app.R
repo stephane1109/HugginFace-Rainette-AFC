@@ -316,11 +316,13 @@ server <- function(input, output, session) {
 
     res = NULL,
     res_chd = NULL,
+    dfm_chd = NULL,
     dfm = NULL,
     filtered_corpus = NULL,
     res_stats_df = NULL,
     clusters = NULL,
     max_n_groups = NULL,
+    max_n_groups_chd = NULL,
 
     res_type = "simple",
 
@@ -511,7 +513,10 @@ server <- function(input, output, session) {
 
     rv$res <- NULL
     rv$res_chd <- NULL
+    rv$dfm_chd <- NULL
     rv$res_type <- "simple"
+    rv$max_n_groups <- NULL
+    rv$max_n_groups_chd <- NULL
     rv$explor_assets <- NULL
 
     ajouter_log(rv, "Clic sur 'Lancer l'analyse' reçu.")
@@ -685,7 +690,9 @@ server <- function(input, output, session) {
           groupes <- res$group
           res_final <- res
           rv$res_chd <- res
+          rv$dfm_chd <- dfm_obj
           rv$max_n_groups <- max(res$group, na.rm = TRUE)
+          rv$max_n_groups_chd <- rv$max_n_groups
 
         } else {
 
@@ -698,14 +705,14 @@ server <- function(input, output, session) {
           res2 <- rainette(dfm_obj, k = input$k, min_segment_size = input$min_segment_size2, min_split_members = input$min_split_members, doc_id = "segment_source")
           if (is.null(res2) || is.null(res2$group) || length(res2$group) == 0) stop("Classification 2 (rainette) impossible.")
 
-          res_d <- rainette2(res1, res2, max_k = input$max_k_double, full = isTRUE(input$double_full), parallel = isTRUE(input$double_parallel))
+          res_d <- rainette2(res1, res2, max_k = input$max_k_double)
           groupes <- cutree(res_d, k = input$k)
-
-          if (isTRUE(input$double_complete_na)) groupes <- rainette2_complete_groups(dfm_obj, groupes)
 
           res_final <- res_d
           rv$res_chd <- res1
+          rv$dfm_chd <- dfm_obj
           rv$max_n_groups <- input$max_k_double
+          rv$max_n_groups_chd <- max(res1$group, na.rm = TRUE)
         }
 
         docvars(filtered_corpus)$Classes <- groupes
@@ -1067,7 +1074,7 @@ server <- function(input, output, session) {
           fluidRow(
             column(
               4,
-              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = rv$max_n_groups, value = min(rv$max_n_groups, 8), step = 1),
+              sliderInput("k_plot", "Nombre de classes (k)", min = 2, max = rv$max_n_groups_chd, value = min(rv$max_n_groups_chd, 8), step = 1),
               selectInput(
                 "measure_plot", "Statistiques",
                 choices = c(
@@ -1131,7 +1138,7 @@ server <- function(input, output, session) {
   })
 
   output$plot_chd <- renderPlot({
-    req(rv$res_chd, rv$dfm)
+    req(rv$res_chd, rv$dfm_chd)
     req(!is.null(input$k_plot))
     req(!is.null(input$measure_plot))
     req(!is.null(input$type_plot))
@@ -1142,7 +1149,7 @@ server <- function(input, output, session) {
 
     rainette_plot(
       rv$res_chd,
-      rv$dfm,
+      rv$dfm_chd,
       k = input$k_plot,
       type = input$type_plot,
       n_terms = input$n_terms_plot,

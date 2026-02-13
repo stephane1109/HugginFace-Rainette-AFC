@@ -57,10 +57,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.type_classification == 'double'",
         numericInput("min_segment_size2", "min_segment_size (classification 2)", value = 15, min = 1, step = 1),
-        numericInput("max_k_double", "max_k (rainette2)", value = 8, min = 2, step = 1),
-        checkboxInput("double_full", "double_full (full = TRUE)", value = TRUE),
-        checkboxInput("double_parallel", "double_parallel (parallel = TRUE)", value = FALSE),
-        checkboxInput("double_complete_na", "Compléter les NA (rainette2_complete_groups)", value = FALSE)
+        numericInput("max_k_double", "max_k (rainette2)", value = 8, min = 2, step = 1)
       ),
 
       tags$div(class = "sidebar-section-title", "Nettoyage"),
