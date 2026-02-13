@@ -162,8 +162,7 @@ ui <- fluidPage(
           "AFC",
           tags$h3("AFC"),
           uiOutput("ui_afc_statut"),
-          tags$pre(style = "white-space: pre-wrap;", textOutput("afc_erreur")),
-          tags$pre(style = "white-space: pre-wrap;", textOutput("afc_vars_erreur")),
+          uiOutput("ui_afc_erreurs"),
 
           tags$h4("AFC des classes (Représentation des classes)"),
           plotOutput("plot_afc_classes", height = "620px"),

@@ -365,8 +365,6 @@ server <- function(input, output, session) {
 
   output$logs <- renderText(rv$logs)
   output$statut <- renderText(rv$statut)
-  output$afc_erreur <- renderText(ifelse(is.null(rv$afc_erreur), "", rv$afc_erreur))
-  output$afc_vars_erreur <- renderText(ifelse(is.null(rv$afc_vars_erreur), "", rv$afc_vars_erreur))
 
   output$barre_progression <- renderUI({
     p <- max(0, min(100, rv$progression))
@@ -396,6 +394,30 @@ server <- function(input, output, session) {
     ncl <- nrow(rv$afc_obj$table)
     nt <- ncol(rv$afc_obj$table)
     tags$p(paste0("AFC calculée sur ", ncl, " classes et ", nt, " termes (table Classes × Termes)."))
+  })
+
+  output$ui_afc_erreurs <- renderUI({
+    messages <- Filter(
+      nzchar,
+      list(
+        rv$afc_erreur,
+        rv$afc_vars_erreur
+      )
+    )
+
+    if (length(messages) == 0) {
+      return(NULL)
+    }
+
+    tags$div(
+      style = "display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;",
+      lapply(messages, function(msg) {
+        tags$div(
+          style = "border: 1px solid #f5c2c7; background: #f8d7da; color: #842029; border-radius: 4px; padding: 10px; white-space: pre-wrap;",
+          msg
+        )
+      })
+    )
   })
 
   output$ui_ner_statut <- renderUI({
