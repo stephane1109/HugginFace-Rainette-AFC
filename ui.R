@@ -121,7 +121,7 @@ ui <- fluidPage(
 
       tags$hr(),
 
-      tags$div(class = "sidebar-section-title", "Cooccurrences"),
+      tags$div(class = "sidebar-section-title", "Cooccurrences (beta)"),
 
       numericInput("top_n", "top_n (wordcloud)", value = 20, min = 5, step = 1),
       numericInput("window_cooc", "window (cooccurrences)", value = 5, min = 1, step = 1),
@@ -165,11 +165,11 @@ ui <- fluidPage(
           tags$pre(style = "white-space: pre-wrap;", textOutput("afc_erreur")),
           tags$pre(style = "white-space: pre-wrap;", textOutput("afc_vars_erreur")),
 
-          tags$h4("AFC des classes (classes uniquement)"),
+          tags$h4("AFC des classes (Représentation des classes)"),
           plotOutput("plot_afc_classes", height = "620px"),
 
           tags$h4("AFC des termes"),
-          tags$p("Les mots sont colorés selon la classe où ils sont le plus surreprésentés (résidus standardisés) et leur taille est proportionnelle à leur fréquence globale."),
+          tags$p("Les mots sont colorés selon la classe où ils sont le plus surreprésentés (résidus standardisés) et leur taille est proportionnelle à leur fréquence globale ou chi2 (selon le choix)."),
           plotOutput("plot_afc", height = "720px"),
           tags$h4("Table des mots projetés (fréquence, chi2, p-value)"),
           tableOutput("table_afc_mots"),
