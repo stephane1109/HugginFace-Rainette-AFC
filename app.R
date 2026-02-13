@@ -1296,23 +1296,65 @@ server <- function(input, output, session) {
     tracer_afc_classes_termes(rv$afc_obj, axes = c(1, 2), top_termes = top_termes, taille_sel = taille_sel, activer_repel = activer_repel)
   })
 
-  output$table_afc_mots <- renderTable({
+  output$ui_table_afc_mots_par_classe <- renderUI({
     if (is.null(rv$afc_table_mots)) {
-      return(data.frame(Message = "AFC mots : non disponible.", stringsAsFactors = FALSE))
+      output$table_afc_mots_message <- renderTable({
+        data.frame(Message = "AFC mots : non disponible.", stringsAsFactors = FALSE)
+      }, rownames = FALSE)
+      return(tableOutput("table_afc_mots_message"))
     }
+
     df <- rv$afc_table_mots
-    colonnes <- intersect(c("Terme", "Classe_max", "frequency", "chi2", "p_value"), names(df))
-    df <- df[, colonnes, drop = FALSE]
-    if ("p_value" %in% names(df)) {
-      df$p_value <- ifelse(
-        is.na(df$p_value),
-        NA_character_,
-        formatC(df$p_value, format = "f", digits = 6)
-      )
+    if (!all(c("Terme", "Classe_max") %in% names(df))) {
+      output$table_afc_mots_message <- renderTable({
+        data.frame(Message = "AFC mots : colonnes manquantes pour le regroupement par classe.", stringsAsFactors = FALSE)
+      }, rownames = FALSE)
+      return(tableOutput("table_afc_mots_message"))
     }
-    if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
-    head(df, 200)
-  }, rownames = FALSE)
+
+    classes <- unique(as.character(df$Classe_max))
+    classes <- classes[!is.na(classes) & nzchar(classes)]
+    classes <- sort(classes)
+
+    if (length(classes) == 0) {
+      output$table_afc_mots_message <- renderTable({
+        data.frame(Message = "AFC mots : aucune classe disponible.", stringsAsFactors = FALSE)
+      }, rownames = FALSE)
+      return(tableOutput("table_afc_mots_message"))
+    }
+
+    ui_tables <- lapply(seq_along(classes), function(i) {
+      cl <- classes[[i]]
+      id <- paste0("table_afc_mots_", i)
+
+      output[[id]] <- renderTable({
+        sous_df <- df[df$Classe_max == cl, , drop = FALSE]
+        colonnes <- intersect(c("Terme", "frequency", "chi2", "p_value"), names(sous_df))
+        sous_df <- sous_df[, colonnes, drop = FALSE]
+
+        if ("p_value" %in% names(sous_df)) {
+          sous_df$p_value <- ifelse(
+            is.na(sous_df$p_value),
+            NA_character_,
+            formatC(sous_df$p_value, format = "f", digits = 6)
+          )
+        }
+
+        if ("chi2" %in% names(sous_df)) {
+          sous_df <- sous_df[order(-sous_df$chi2), , drop = FALSE]
+        }
+
+        head(sous_df, 100)
+      }, rownames = FALSE)
+
+      tagList(
+        tags$h5(cl),
+        tableOutput(id)
+      )
+    })
+
+    do.call(tagList, ui_tables)
+  })
 
   output$plot_afc_vars <- renderPlot({
     if (!is.null(rv$afc_vars_erreur) && nzchar(rv$afc_vars_erreur)) {
