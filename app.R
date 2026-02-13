@@ -1263,6 +1263,13 @@ server <- function(input, output, session) {
     df <- rv$afc_table_mots
     colonnes <- intersect(c("Terme", "Classe_max", "frequency", "chi2", "p_value"), names(df))
     df <- df[, colonnes, drop = FALSE]
+    if ("p_value" %in% names(df)) {
+      df$p_value <- ifelse(
+        is.na(df$p_value),
+        NA_character_,
+        formatC(df$p_value, format = "f", digits = 5)
+      )
+    }
     if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
     head(df, 200)
   }, rownames = FALSE)
@@ -1295,6 +1302,13 @@ server <- function(input, output, session) {
     df <- rv$afc_table_vars
     colonnes <- intersect(c("Modalite", "Classe_max", "frequency", "chi2", "p_value"), names(df))
     df <- df[, colonnes, drop = FALSE]
+    if ("p_value" %in% names(df)) {
+      df$p_value <- ifelse(
+        is.na(df$p_value),
+        NA_character_,
+        formatC(df$p_value, format = "f", digits = 5)
+      )
+    }
     if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
     head(df, 200)
   }, rownames = FALSE)
