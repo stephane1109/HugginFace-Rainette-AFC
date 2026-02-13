@@ -28,17 +28,17 @@ ui_aide_huggingface <- function() {
     tags$h2("Aide"),
 
     tags$h3("Pourquoi vos fichiers peuvent disparaître sur Hugging Face"),
-    tags$p("Sur Hugging Face Spaces, l’application tourne dans un conteneur distant. Le stockage local de ce conteneur est temporaire : si le Space redémarre, si la session Shiny est recréée, ou si la page est rechargée après une déconnexion, les fichiers générés pendant une analyse précédente peuvent ne plus être disponibles."),
-    tags$p("Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse. Si tu veux récupérer des résultats longtemps après, il faut un stockage persistant (option de stockage persistant du Space) ou un envoi automatique des exports vers un stockage externe."),
+    tags$p("Sur Hugging Face Spaces, le stockage local de ce conteneur est temporaire : si le serveur redémarre, ou si la page est rechargée après une déconnexion, les fichiers générés pendant une analyse précédente peuvent ne plus être disponibles."),
+    tags$p("Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse."),
 
     tags$h3("Logique générale de l’application"),
-    tags$p("Tu uploade un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné, puis produit des images (nuages de mots et réseaux de cooccurrences). L’onglet d’exploration te permet de visualiser la CHD et les sorties."),
+    tags$p("Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné, puis produit des images (nuages de mots et réseaux de cooccurrences). L’onglet d’exploration (rainette_explor) permet de visualiser la CHD."),
 
     tags$h3("Paramètres de l’analyse"),
     tags$p(tags$b("segment_size"), " : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs."),
     tags$p(tags$b("k (nombre de classes)"), " : nombre de classes demandé pour la CHD."),
-    tags$p(tags$b("min_segment_size"), " : tle nombre minimal de termes par segment. En effet, lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, nos segments peuvent donc varier en taille (entendue comme le nombre de termes encore présents). Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document (si possible) jusqu'à atteindre la taille minimale souhaitée."),
-    tags$p(tags$b("min_split_members"), " : le nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification."),
+    tags$p(tags$b("min_segment_size"), " : nombre minimal de termes par segment. En effet, lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, nos segments peuvent donc varier en taille (entendue comme le nombre de termes encore présents). Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document (si possible) jusqu'à atteindre la taille minimale souhaitée."),
+    tags$p(tags$b("min_split_members"), " : nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification."),
     tags$p(tags$b("dfm_trim min_docfreq"), " : fréquence minimale en nombre de segments pour conserver un terme dans le DFM. Plus haut enlève les termes rares."),
     tags$p(tags$b("max_p (p-value)"), " : seuil de p-value pour filtrer les termes mis en avant dans les statistiques et le surlignage HTML."),
     tags$p(tags$b("top_n (wordcloud)"), " : nombre de termes affichés dans chaque nuage de mots."),
