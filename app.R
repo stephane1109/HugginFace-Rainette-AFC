@@ -507,6 +507,7 @@ server <- function(input, output, session) {
     suppressWarnings(wordcloud(
       words = names(freq),
       freq = as.numeric(freq),
+      min.freq = 1,
       max.words = min(150, length(freq)),
       random.order = FALSE,
       colors = brewer.pal(8, "Dark2")
@@ -536,6 +537,7 @@ server <- function(input, output, session) {
           suppressWarnings(wordcloud(
             words = names(freq),
             freq = as.numeric(freq),
+            min.freq = 1,
             max.words = min(120, length(freq)),
             random.order = FALSE,
             colors = brewer.pal(8, "Set2")
