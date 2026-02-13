@@ -34,7 +34,7 @@ ui <- fluidPage(
     tags$br(),
     "En test j'ai également expérimenté la recherche de NER dans le corpus s'appuyant sur la librairie Spacy (modele \"md\").",
     tags$br(),
-    "Pour d'autres infos vous pouvez consulter mon site www.codeandcortex.fr",
+    "Pour d'autres infos vous pouvez consulter mon site : www.codeandcortex.fr",
     tags$br(),
     "version beta 0.2 - 12-02-2026"
   ),
