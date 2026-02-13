@@ -916,7 +916,7 @@ server <- function(input, output, session) {
           }, silent = TRUE)
         }
 
-        generer_concordancier_html(
+        args_concordancier <- list(
           chemin_sortie = html_file,
           segments_by_class = segments_by_class,
           res_stats_df = res_stats_df,
@@ -927,6 +927,15 @@ server <- function(input, output, session) {
           avancer = avancer,
           rv = rv
         )
+
+        fml <- tryCatch(names(formals(generer_concordancier_html)), error = function(e) character(0))
+        if ("explor_assets" %in% fml) {
+          args_concordancier$explor_assets <- explor_assets
+        } else {
+          ajouter_log(rv, "Concordancier : argument explor_assets indisponible (version de fonction plus ancienne).")
+        }
+
+        do.call(generer_concordancier_html, args_concordancier)
 
         rv$html_file <- html_file
 
@@ -960,29 +969,80 @@ server <- function(input, output, session) {
 
   observeEvent(input$explor, {
     tryCatch({
-      req(rv$html_file)
+      ancien_viewer <- getOption("shinygadgets.viewer")
+      ancien_default_viewer <- getOption("shinygadgets.defaultViewer")
+      on.exit({
+        options(shinygadgets.viewer = ancien_viewer)
+        options(shinygadgets.defaultViewer = ancien_default_viewer)
+      }, add = TRUE)
+
+      viewer_popup <- function(url) {
+        if (is.null(url) || !nzchar(url)) {
+          showNotification("URL explorateur invalide.", type = "error", duration = 8)
+          return(invisible(NULL))
+        }
+
+        showModal(modalDialog(
+          title = "Explorateur Rainette (UI native)",
+          size = "l",
+          easyClose = TRUE,
+          footer = tagList(
+            tags$a("Ouvrir dans un nouvel onglet", href = url, target = "_blank", class = "btn btn-primary"),
+            modalButton("Fermer")
+          ),
+          tags$iframe(
+            src = url,
+            style = "width: 100%; height: 80vh; border: 0;"
+          )
+        ))
+
+        invisible(NULL)
+      }
+
+      options(
+        shinygadgets.viewer = viewer_popup,
+        shinygadgets.defaultViewer = viewer_popup
+      )
 
       if (!file.exists(rv$html_file)) {
         stop("Fichier explorateur introuvable. Relance l'analyse.")
       }
 
-      if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-        shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+      dtm_aligne <- rv$dfm[dn, ]
+      corpus_aligne <- rv$filtered_corpus[dn]
+      textes_alignes <- as.character(quanteda::texts(corpus_aligne))
+
+      appel_ok <- FALSE
+      erreurs <- character(0)
+
+      essais <- list(
+        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, corpus = corpus_aligne),
+        function() rainette::rainette_explor(res = rv$res, dtm = dtm_aligne, text = textes_alignes),
+        function() rainette::rainette_explor(rv$res, dtm_aligne, corpus_aligne),
+        function() rainette::rainette_explor(rv$res, dtm_aligne, textes_alignes)
+      )
+
+      for (f in essais) {
+        essai <- tryCatch({
+          f()
+          TRUE
+        }, error = function(e) {
+          msg <- conditionMessage(e)
+          erreurs <<- c(erreurs, msg)
+          ajouter_log(rv, paste0("Explorateur rainette_explor (tentative) : ", msg))
+          FALSE
+        })
+
+        if (isTRUE(essai)) {
+          appel_ok <- TRUE
+          break
+        }
       }
 
-      url_explor <- paste0("/", rv$exports_prefix, "/", basename(rv$html_file))
-
-      showModal(modalDialog(
-        title = "Explorateur Rainette",
-        size = "l",
-        easyClose = TRUE,
-        footer = tagList(
-          tags$a("Ouvrir dans un nouvel onglet", href = url_explor, target = "_blank", class = "btn btn-primary"),
-          modalButton("Fermer")
-        ),
-        tags$iframe(
-          src = url_explor,
-          style = "width: 100%; height: 80vh; border: 0;"
+      if (!appel_ok) {
+        stop(
+          "Impossible d'ouvrir l'UI native rainette_explor avec cette version/configuration. ",
+          if (length(erreurs) > 0) paste0("Dernière erreur : ", tail(erreurs, 1)) else ""
         )
       ))
     }, error = function(e) {

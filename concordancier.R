@@ -115,7 +115,8 @@ generer_concordancier_html <- function(
   spacy_tokens_df,
   explor_assets = NULL,
   avancer = NULL,
-  rv = NULL
+  rv = NULL,
+  ...
 ) {
   if (!is.null(rv)) ajouter_log(rv, "Concordancier : génération HTML (filtré + surlignage Unicode).")
 
