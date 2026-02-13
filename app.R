@@ -1342,7 +1342,7 @@ server <- function(input, output, session) {
       df$p_value <- ifelse(
         is.na(df$p_value),
         NA_character_,
-        formatC(df$p_value, format = "f", digits = 5)
+        formatC(df$p_value, format = "f", digits = 6)
       )
     }
     if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
