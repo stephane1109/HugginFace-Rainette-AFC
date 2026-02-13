@@ -654,7 +654,8 @@ server <- function(input, output, session) {
         textes_chd <- appliquer_nettoyage_et_minuscules(
           textes = textes_orig,
           activer_nettoyage = isTRUE(input$nettoyage_caracteres),
-          forcer_minuscules = isTRUE(input$forcer_minuscules_avant)
+          forcer_minuscules = isTRUE(input$forcer_minuscules_avant),
+          supprimer_chiffres = isTRUE(input$supprimer_chiffres)
         )
         names(textes_chd) <- ids_corpus
 
@@ -669,7 +670,7 @@ server <- function(input, output, session) {
         if (!utiliser_pipeline_spacy) {
 
           ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
-          tok_base <- tokens(textes_chd, remove_punct = TRUE, remove_numbers = TRUE)
+          tok_base <- tokens(textes_chd, remove_punct = TRUE, remove_numbers = isTRUE(input$supprimer_chiffres))
           tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
@@ -718,7 +719,7 @@ server <- function(input, output, session) {
           rv$spacy_tokens_df <- sp$tokens_df
 
           avancer(0.40, "spaCy : tokens + DFM")
-          tok_base <- tokens(textes_spacy, remove_punct = TRUE, remove_numbers = TRUE)
+          tok_base <- tokens(textes_spacy, remove_punct = TRUE, remove_numbers = isTRUE(input$supprimer_chiffres))
           tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
