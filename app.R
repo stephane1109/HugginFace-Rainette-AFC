@@ -64,6 +64,55 @@ normaliser_classes <- function(x) {
   y
 }
 
+regex_echapper <- function(x) {
+  gsub("([][{}()+*^$|\\?.])", "\\\\\\1", x)
+}
+
+surligner_terme_segment <- function(segment, terme) {
+  if (is.na(segment) || !nzchar(segment) || is.na(terme) || !nzchar(terme)) {
+    if (is.null(segment) || length(segment) == 0 || is.na(segment)) return("")
+    return(htmlEscape(segment))
+  }
+
+  seg_safe <- htmlEscape(segment)
+  terme_safe <- htmlEscape(terme)
+  pattern <- paste0("(?i)", regex_echapper(terme_safe))
+
+  gsub(
+    pattern,
+    "<span style='background-color: #fff59d; font-weight: 600;'>\\0</span>",
+    seg_safe,
+    perl = TRUE
+  )
+}
+
+generer_table_html_afc_mots <- function(sous_df) {
+  if (is.null(sous_df) || nrow(sous_df) == 0) {
+    return(tags$p("Aucun terme disponible pour cette classe."))
+  }
+
+  en_tetes <- names(sous_df)
+  lignes <- lapply(seq_len(nrow(sous_df)), function(i) {
+    tags$tr(
+      lapply(en_tetes, function(col) {
+        val <- sous_df[[col]][i]
+        if (col == "Segment_texte") {
+          terme <- if ("Terme" %in% names(sous_df)) as.character(sous_df$Terme[i]) else ""
+          return(tags$td(HTML(surligner_terme_segment(as.character(val), terme))))
+        }
+        if (is.null(val) || length(val) == 0 || is.na(val)) return(tags$td(""))
+        tags$td(htmlEscape(as.character(val)))
+      })
+    )
+  })
+
+  tags$table(
+    class = "table table-striped table-condensed",
+    tags$thead(tags$tr(lapply(en_tetes, tags$th))),
+    tags$tbody(lignes)
+  )
+}
+
 construire_segments_exemples_afc <- function(termes_stats, dfm_obj, corpus_obj, max_chars = 220) {
   if (is.null(termes_stats) || nrow(termes_stats) == 0 || is.null(dfm_obj) || is.null(corpus_obj)) return(termes_stats)
   if (!all(c("Terme", "Classe_max") %in% names(termes_stats))) return(termes_stats)
@@ -1373,7 +1422,7 @@ server <- function(input, output, session) {
       cl <- classes[[i]]
       id <- paste0("table_afc_mots_", i)
 
-      output[[id]] <- renderTable({
+      output[[id]] <- renderUI({
         sous_df <- df[df$Classe_max == cl, , drop = FALSE]
         colonnes <- intersect(c("Terme", "frequency", "chi2", "p_value", "Segment_texte"), names(sous_df))
         sous_df <- sous_df[, colonnes, drop = FALSE]
@@ -1390,12 +1439,13 @@ server <- function(input, output, session) {
           sous_df <- sous_df[order(-sous_df$chi2), , drop = FALSE]
         }
 
-        head(sous_df, 100)
-      }, rownames = FALSE)
+        sous_df <- head(sous_df, 100)
+        generer_table_html_afc_mots(sous_df)
+      })
 
       tagList(
         tags$h5(cl),
-        tableOutput(id)
+        uiOutput(id)
       )
     })
 
