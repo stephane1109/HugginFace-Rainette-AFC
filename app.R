@@ -923,7 +923,6 @@ server <- function(input, output, session) {
           max_p = input$max_p,
           textes_indexation = textes_index_ok,
           spacy_tokens_df = rv$spacy_tokens_df,
-          explor_assets = explor_assets,
           avancer = avancer,
           rv = rv
         )
