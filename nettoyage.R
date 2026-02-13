@@ -11,7 +11,8 @@ REGEX_CARACTERES_A_SUPPRIMER <- paste0("[^", REGEX_CARACTERES_AUTORISES, "]")
 appliquer_nettoyage_et_minuscules <- function(textes,
                                              activer_nettoyage = FALSE,
                                              forcer_minuscules = FALSE,
-                                             supprimer_chiffres = FALSE) {
+                                             supprimer_chiffres = FALSE,
+                                             supprimer_apostrophes = FALSE) {
   x <- textes
   if (is.null(x)) return(character(0))
 
@@ -21,6 +22,11 @@ appliquer_nettoyage_et_minuscules <- function(textes,
   # Option : suppression des chiffres AVANT tokenisation
   if (isTRUE(supprimer_chiffres)) {
     x <- gsub("[0-9]+", " ", x, perl = TRUE)
+  }
+
+  # Option : suppression des apostrophes droites et typographiques
+  if (isTRUE(supprimer_apostrophes)) {
+    x <- gsub("['’]+", " ", x, perl = TRUE)
   }
 
   # Option : nettoyage des caractères "non autorisés"

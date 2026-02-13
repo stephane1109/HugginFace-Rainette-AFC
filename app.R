@@ -745,7 +745,8 @@ server <- function(input, output, session) {
           textes = textes_orig,
           activer_nettoyage = isTRUE(input$nettoyage_caracteres),
           forcer_minuscules = isTRUE(input$forcer_minuscules_avant),
-          supprimer_chiffres = isTRUE(input$supprimer_chiffres)
+          supprimer_chiffres = isTRUE(input$supprimer_chiffres),
+          supprimer_apostrophes = isTRUE(input$supprimer_apostrophes)
         )
         names(textes_chd) <- ids_corpus
 

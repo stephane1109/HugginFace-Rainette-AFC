@@ -73,6 +73,7 @@ ui <- fluidPage(
 
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
+      checkboxInput("supprimer_apostrophes", "Supprimer les apostrophes (', ’)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
