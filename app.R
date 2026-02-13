@@ -1000,6 +1000,10 @@ server <- function(input, output, session) {
 
       tabsetPanel(
         tabPanel(
+          "CHD",
+          uiOutput("ui_explor_chd")
+        ),
+        tabPanel(
           "Concordancier HTML",
           tags$iframe(
             src = paste0("/", rv$exports_prefix, "/segments_par_classe.html"),
@@ -1036,16 +1040,52 @@ server <- function(input, output, session) {
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
   })
 
+  output$ui_explor_chd <- renderUI({
+    req(rv$exports_prefix, rv$export_dir)
+
+    candidats <- c(
+      file.path("explor", "chd.png"),
+      "chd.png"
+    )
+    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
+
+    if (is.na(src_rel) || !nzchar(src_rel)) {
+      return(tags$p("CHD non disponible dans l'exploration. Relance une analyse."))
+    }
+
+    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
+  })
+
   output$ui_wordcloud <- renderUI({
-    req(input$classe_viz, rv$exports_prefix)
-    src <- paste0("/", rv$exports_prefix, "/wordclouds/cluster_", input$classe_viz, "_wordcloud.png")
-    tags$img(src = src, style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    req(input$classe_viz, rv$exports_prefix, rv$export_dir)
+
+    candidats <- c(
+      file.path("wordclouds", paste0("cluster_", input$classe_viz, "_wordcloud.png")),
+      file.path("explor", paste0("wordcloud_classe_", input$classe_viz, ".png"))
+    )
+    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
+
+    if (is.na(src_rel) || !nzchar(src_rel)) {
+      return(tags$p("Aucun nuage de mots disponible pour cette classe."))
+    }
+
+    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
   })
 
   output$ui_cooc <- renderUI({
-    req(input$classe_viz, rv$exports_prefix)
-    src <- paste0("/", rv$exports_prefix, "/cooccurrences/cluster_", input$classe_viz, "_fcm_network.png")
-    tags$img(src = src, style = "max-width: 100%; height: auto; border: 1px solid #999;")
+    req(input$classe_viz, rv$exports_prefix, rv$export_dir)
+
+    candidats <- c(
+      file.path("cooccurrences", paste0("cluster_", input$classe_viz, "_fcm_network.png")),
+      file.path("explor", paste0("cooc_classe_", input$classe_viz, ".png"))
+    )
+    src_rel <- candidats[file.exists(file.path(rv$export_dir, candidats))][1]
+
+    if (is.na(src_rel) || !nzchar(src_rel)) {
+      return(tags$p("Aucune cooccurrence disponible pour cette classe."))
+    }
+
+    tags$img(src = file.path("/", rv$exports_prefix, src_rel), style = "max-width: 100%; height: auto; border: 1px solid #999;")
   })
 
   output$table_stats_classe <- renderTable({
