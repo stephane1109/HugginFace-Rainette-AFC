@@ -105,21 +105,33 @@ assurer_docvars_dfm_minimal <- function(dfm_obj, corpus_aligne) {
   dfm_obj
 }
 
-construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, rv, libelle) {
+construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retirer_stopwords, rv, libelle) {
   n_base <- compter_tokens(tok_base)
   ajouter_log(rv, paste0(libelle, " : tokens (avant stopwords) = ", n_base))
 
-  tok_sw <- tokens_remove(tok_base, stopwords("fr"))
-  tok_sw <- tokens_tolower(tok_sw)
-  n_sw <- compter_tokens(tok_sw)
-  ajouter_log(rv, paste0(libelle, " : tokens (après stopwords) = ", n_sw))
+  if (isTRUE(retirer_stopwords)) {
+    tok_sw <- tokens_remove(tok_base, stopwords("fr"))
+    tok_sw <- tokens_tolower(tok_sw)
+    n_sw <- compter_tokens(tok_sw)
+    ajouter_log(rv, paste0(libelle, " : tokens (après stopwords) = ", n_sw))
+    tok_final <- tok_sw
+  } else {
+    ajouter_log(rv, paste0(libelle, " : suppression des stopwords désactivée."))
+    tok_final <- tokens_tolower(tok_base)
+  }
 
-  tok_final <- tok_sw
   dfm_obj <- dfm(tok_final)
   dfm_obj <- dfm_trim(dfm_obj, min_docfreq = min_docfreq)
-  ajouter_log(rv, paste0(libelle, " : DFM après trim = ", ndoc(dfm_obj), " docs ; ", nfeat(dfm_obj), " termes (avec stopwords retirés)"))
+  ajouter_log(
+    rv,
+    paste0(
+      libelle,
+      " : DFM après trim = ", ndoc(dfm_obj), " docs ; ", nfeat(dfm_obj),
+      ifelse(isTRUE(retirer_stopwords), " termes (avec stopwords retirés)", " termes (sans suppression des stopwords)")
+    )
+  )
 
-  if (nfeat(dfm_obj) < 2) {
+  if (isTRUE(retirer_stopwords) && nfeat(dfm_obj) < 2) {
     ajouter_log(rv, paste0(libelle, " : DFM trop pauvre avec stopwords retirés. Relance automatique sans suppression des stopwords."))
     tok_final <- tokens_tolower(tok_base)
     dfm_obj <- dfm(tok_final)
@@ -627,6 +639,7 @@ server <- function(input, output, session) {
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
+            retirer_stopwords = isTRUE(input$retirer_stopwords),
             rv = rv,
             libelle = "Standard"
           )
@@ -674,6 +687,7 @@ server <- function(input, output, session) {
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
+            retirer_stopwords = isTRUE(input$spacy_retirer_stopwords),
             rv = rv,
             libelle = "spaCy"
           )
