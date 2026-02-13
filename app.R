@@ -978,59 +978,48 @@ server <- function(input, output, session) {
 
 
   observeEvent(input$explor, {
-    tryCatch({
-      if (is.null(rv$res)) {
-        stop("CHD non disponible. Lance une analyse avant d'ouvrir l'exploration.")
-      }
-      if (is.null(rv$html_file) || !file.exists(rv$html_file)) {
-        stop("Fichier explorateur introuvable. Relance l'analyse.")
-      }
-      if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
-        stop("Préfixe d'export invalide.")
-      }
-      if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
-        shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
-      }
+    req(rv$export_dir, rv$html_file, rv$clusters, rv$res_stats_df)
 
-      explor_url <- file.path("/", rv$exports_prefix, basename(rv$html_file))
+    if (is.null(rv$exports_prefix) || !nzchar(rv$exports_prefix)) {
+      showNotification("Préfixe d'export invalide.", type = "error", duration = 8)
+      return(invisible(NULL))
+    }
+    if (!(rv$exports_prefix %in% names(shiny::resourcePaths()))) {
+      shiny::addResourcePath(rv$exports_prefix, rv$export_dir)
+    }
 
-      showModal(modalDialog(
-        title = "Exploration",
-        size = "l",
-        easyClose = TRUE,
-        footer = tagList(
-          tags$a("Ouvrir le concordancier dans un nouvel onglet", href = explor_url, target = "_blank", class = "btn btn-primary"),
-          modalButton("Fermer")
-        ),
-        tabsetPanel(
-          tabPanel(
-            "CHD",
-            tags$br(),
-            uiOutput("ui_chd_statut"),
-            uiOutput("ui_explor_chd")
-          ),
-          tabPanel(
-            "Nuage de mots",
-            tags$br(),
-            uiOutput("ui_explor_wordclouds")
-          ),
-          tabPanel(
-            "Cooccurrences",
-            tags$br(),
-            uiOutput("ui_explor_coocs")
-          ),
-          tabPanel(
-            "Concordancier",
-            tags$br(),
-            uiOutput("ui_explor_concordancier")
+    classe_defaut <- as.character(rv$clusters[1])
+
+    showModal(modalDialog(
+      title = "Exploration (serveur)",
+      size = "l",
+      easyClose = TRUE,
+      footer = modalButton("Fermer"),
+
+      selectInput("classe_viz", "Classe", choices = as.character(rv$clusters), selected = classe_defaut),
+
+      tabsetPanel(
+        tabPanel(
+          "Concordancier HTML",
+          tags$iframe(
+            src = paste0("/", rv$exports_prefix, "/segments_par_classe.html"),
+            style = "width: 100%; height: 70vh; border: 1px solid #999;"
           )
+        ),
+        tabPanel(
+          "Wordcloud",
+          uiOutput("ui_wordcloud")
+        ),
+        tabPanel(
+          "Cooccurrences",
+          uiOutput("ui_cooc")
+        ),
+        tabPanel(
+          "Statistiques",
+          tableOutput("table_stats_classe")
         )
-      ))
-    }, error = function(e) {
-      msg <- paste0("Exploration : ", e$message)
-      ajouter_log(rv, msg)
-      showNotification(msg, type = "error", duration = 8)
-    })
+      )
+    ))
   })
 
   output$plot_afc_classes <- renderPlot({
@@ -1047,82 +1036,34 @@ server <- function(input, output, session) {
     tracer_afc_classes_seules(rv$afc_obj, axes = c(1, 2), cex_labels = 1.05)
   })
 
-  output$ui_explor_chd <- renderUI({
-    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$chd) || !nzchar(rv$explor_assets$chd)) {
-      return(tags$p("CHD non disponible dans l'exploration. Relance une analyse."))
-    }
+  output$ui_wordcloud <- renderUI({
+    req(input$classe_viz, rv$exports_prefix)
+    src <- paste0("/", rv$exports_prefix, "/wordclouds/cluster_", input$classe_viz, "_wordcloud.png")
+    tags$img(src = src, style = "max-width: 100%; height: auto; border: 1px solid #999;")
+  })
 
-    tags$img(
-      src = file.path("/", rv$exports_prefix, rv$explor_assets$chd),
-      style = "max-width: 100%; height: auto; border: 1px solid #ddd;"
+  output$ui_cooc <- renderUI({
+    req(input$classe_viz, rv$exports_prefix)
+    src <- paste0("/", rv$exports_prefix, "/cooccurrences/cluster_", input$classe_viz, "_fcm_network.png")
+    tags$img(src = src, style = "max-width: 100%; height: auto; border: 1px solid #999;")
+  })
+
+  output$table_stats_classe <- renderTable({
+    req(input$classe_viz, rv$res_stats_df)
+    cl <- as.numeric(input$classe_viz)
+
+    df <- rv$res_stats_df
+    df <- df[df$Classe == cl, , drop = FALSE]
+
+    colonnes_possibles <- intersect(
+      c("Terme", "chi2", "lr", "frequency", "docprop", "p", "p_value_filter"),
+      names(df)
     )
-  })
+    df <- df[, colonnes_possibles, drop = FALSE]
 
-  output$ui_explor_concordancier <- renderUI({
-    if (is.null(rv$filtered_corpus) || length(rv$filtered_corpus) == 0) {
-      return(tags$p("Concordancier non disponible. Lance une analyse."))
-    }
-
-    classes <- as.character(docvars(rv$filtered_corpus)$Classes)
-    textes <- as.character(rv$filtered_corpus)
-    ids <- docnames(rv$filtered_corpus)
-
-    df <- data.frame(doc_id = ids, Classe = classes, Segment = textes, stringsAsFactors = FALSE)
-    df <- df[!is.na(df$Classe) & nzchar(df$Classe), , drop = FALSE]
-    if (nrow(df) == 0) return(tags$p("Aucun segment classé disponible."))
-
-    cl_uniques <- sort(unique(df$Classe))
-    blocs <- lapply(cl_uniques, function(cl) {
-      dcl <- df[df$Classe == cl, , drop = FALSE]
-      n_aff <- min(30L, nrow(dcl))
-      tags$details(
-        style = "margin-bottom: 16px;",
-        tags$summary(tags$b(paste0("Classe ", cl, " (", nrow(dcl), " segments)"))),
-        tags$p(style = "margin-top: 8px; color: #666;", paste0("Aperçu des ", n_aff, " premiers segments.")),
-        do.call(tagList, lapply(seq_len(n_aff), function(i) {
-          tags$p(style = "padding: 8px; border-bottom: 1px solid #eee;", dcl$Segment[i])
-        }))
-      )
-    })
-
-    do.call(tagList, blocs)
-  })
-
-  output$ui_explor_wordclouds <- renderUI({
-    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$wordclouds) || nrow(rv$explor_assets$wordclouds) == 0) {
-      return(tags$p("Aucun nuage de mots disponible."))
-    }
-
-    items <- lapply(seq_len(nrow(rv$explor_assets$wordclouds)), function(i) {
-      cl <- as.character(rv$explor_assets$wordclouds$classe[i])
-      src <- as.character(rv$explor_assets$wordclouds$src[i])
-      tags$div(
-        style = "margin-bottom: 20px;",
-        tags$h4(paste0("Classe ", cl)),
-        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
-      )
-    })
-
-    do.call(tagList, items)
-  })
-
-  output$ui_explor_coocs <- renderUI({
-    if (is.null(rv$explor_assets) || is.null(rv$explor_assets$coocs) || nrow(rv$explor_assets$coocs) == 0) {
-      return(tags$p("Aucune cooccurrence disponible."))
-    }
-
-    items <- lapply(seq_len(nrow(rv$explor_assets$coocs)), function(i) {
-      cl <- as.character(rv$explor_assets$coocs$classe[i])
-      src <- as.character(rv$explor_assets$coocs$src[i])
-      tags$div(
-        style = "margin-bottom: 20px;",
-        tags$h4(paste0("Classe ", cl)),
-        tags$img(src = file.path("/", rv$exports_prefix, src), style = "max-width: 100%; height: auto; border: 1px solid #ddd;")
-      )
-    })
-
-    do.call(tagList, items)
-  })
+    if ("chi2" %in% names(df)) df <- df[order(-df$chi2), , drop = FALSE]
+    head(df, 50)
+  }, rownames = FALSE)
 
   output$plot_afc <- renderPlot({
     if (!is.null(rv$afc_erreur) && nzchar(rv$afc_erreur)) {
