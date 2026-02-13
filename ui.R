@@ -27,7 +27,9 @@ ui <- fluidPage(
   titlePanel("CHD - AFC avec Rainette sur corpus IRaMuTeQ"),
   tags$p(
     style = "font-size: 14px;",
-    "Le script est basé sur le package Rainette de Julien Barnier, l'exercice ici est de rendre fonctionnel sur un serveur distant l'analyse CHD et AFC. En test j'ai également expérimenté la recherche de NER dans le corpus s'appuyant sur la librairie Spacy (modele \"md\"). Pour d'autres infos vous pouvez consulter mon site www.codeandcortex.fr"
+    "Le script est basé sur le package Rainette de Julien Barnier, l'exercice ici est de rendre fonctionnel sur un serveur distant l'analyse CHD et AFC. En test j'ai également expérimenté la recherche de NER dans le corpus s'appuyant sur la librairie Spacy (modele \"md\"). 
+    Pour d'autres infos vous pouvez consulter mon site www.codeandcortex.fr"
+    "version beta - 13-02-2026"
   ),
 
   sidebarLayout(
@@ -112,6 +114,8 @@ ui <- fluidPage(
 
       tags$hr(),
 
+      tabPanel("Cooccurences)",
+
       numericInput("top_n", "top_n (wordcloud)", value = 20, min = 5, step = 1),
       numericInput("window_cooc", "window (cooccurrences)", value = 5, min = 1, step = 1),
       numericInput("top_feat", "top_feat (cooccurrences)", value = 20, min = 5, step = 1),
@@ -147,7 +151,7 @@ ui <- fluidPage(
         ),
 
         tabPanel(
-          "NER (test)",
+          "NER (beta)",
           tags$h3("Détection d'entités nommées (spaCy)"),
           uiOutput("ui_ner_statut"),
           tags$h3("Résumé"),
