@@ -629,8 +629,11 @@ server <- function(input, output, session) {
         rv$statut <- "Prétraitement et DFM..."
 
         filtrage_morpho <- isTRUE(input$filtrage_morpho)
+        utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
+        retirer_stopwords_spacy <- isTRUE(input$spacy_retirer_stopwords)
+        utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes || retirer_stopwords_spacy
 
-        if (!filtrage_morpho) {
+        if (!utiliser_pipeline_spacy) {
 
           ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
           tok_base <- tokens(textes_chd, remove_punct = TRUE, remove_numbers = TRUE)
@@ -648,18 +651,19 @@ server <- function(input, output, session) {
 
         } else {
 
-          pos_a_conserver <- input$pos_spacy_a_conserver
-          if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
-
-          utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
-          retirer_stopwords <- isTRUE(input$spacy_retirer_stopwords)
+          pos_a_conserver <- NULL
+          if (isTRUE(filtrage_morpho)) {
+            pos_a_conserver <- input$pos_spacy_a_conserver
+            if (is.null(pos_a_conserver) || length(pos_a_conserver) == 0) pos_a_conserver <- c("NOUN", "ADJ")
+          }
 
           ajouter_log(
             rv,
             paste0(
-              "spaCy (fr_core_news_md) | POS: ", paste(pos_a_conserver, collapse = ", "),
+              "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
+              ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
-              " | stopwords=", ifelse(retirer_stopwords, "1", "0")
+              " | stopwords_apres_spacy(R)=", ifelse(retirer_stopwords_spacy, "1", "0")
             )
           )
 
@@ -671,7 +675,7 @@ server <- function(input, output, session) {
             textes = unname(textes_chd),
             pos_a_conserver = pos_a_conserver,
             utiliser_lemmes = utiliser_lemmes,
-            retirer_stopwords = retirer_stopwords,
+            retirer_stopwords = FALSE,
             lower_input = isTRUE(input$forcer_minuscules_avant),
             rv = rv
           )
@@ -687,7 +691,7 @@ server <- function(input, output, session) {
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
-            retirer_stopwords = isTRUE(input$spacy_retirer_stopwords),
+            retirer_stopwords = retirer_stopwords_spacy,
             rv = rv,
             libelle = "spaCy"
           )
