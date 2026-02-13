@@ -246,6 +246,41 @@ supprimer_docs_vides_dfm <- function(dfm_obj, corpus_aligne, tok_aligne, rv) {
   list(dfm = dfm_obj, corpus = corpus_aligne, tok = tok_aligne)
 }
 
+
+calculer_k_effectif <- function(dfm_obj, k_demande, min_split_members, rv = NULL) {
+  n_docs <- ndoc(dfm_obj)
+  if (!is.finite(min_split_members) || is.na(min_split_members) || min_split_members < 1) {
+    min_split_members <- 1
+  }
+
+  k_max_theorique <- floor(n_docs / min_split_members)
+  if (!is.finite(k_max_theorique) || is.na(k_max_theorique)) k_max_theorique <- n_docs
+  k_max_theorique <- max(1, min(k_max_theorique, n_docs - 1))
+
+  k_effectif <- min(k_demande, k_max_theorique)
+
+  if (k_effectif < 2) {
+    stop(
+      "Paramètres incompatibles : min_split_members=", min_split_members,
+      " est trop élevé pour ", n_docs,
+      " segments. Réduis min_split_members ou augmente la taille du corpus segmenté."
+    )
+  }
+
+  if (!is.null(rv) && k_effectif < k_demande) {
+    ajouter_log(
+      rv,
+      paste0(
+        "k ajusté automatiquement de ", k_demande, " à ", k_effectif,
+        " pour respecter min_split_members=", min_split_members,
+        " (", n_docs, " segments disponibles)."
+      )
+    )
+  }
+
+  k_effectif
+}
+
 verifier_dfm_avant_rainette <- function(dfm_obj, input) {
   if (ndoc(dfm_obj) < 2) {
     stop("Après filtrages, il reste moins de 2 segments utilisables. Réduis les filtrages ou augmente segment_size.")
@@ -256,9 +291,6 @@ verifier_dfm_avant_rainette <- function(dfm_obj, input) {
       "Même avec min_docfreq=1, cela arrive si le filtrage morphosyntaxique est trop strict et/ou si les stopwords retirent la majorité des formes. ",
       "Élargis les catégories morphosyntaxiques ou augmente segment_size."
     )
-  }
-  if (input$k >= ndoc(dfm_obj)) {
-    stop("k est trop grand par rapport au nombre de segments restants. Diminue k ou réduis les filtrages.")
   }
 }
 
@@ -816,9 +848,11 @@ server <- function(input, output, session) {
           rv$res_type <- "simple"
           ajouter_log(rv, "Mode : classification simple (rainette).")
 
+          k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
+
           res <- rainette(
             dfm_obj,
-            k = input$k,
+            k = k_effectif,
             min_segment_size = input$min_segment_size,
             min_split_members = input$min_split_members,
             doc_id = "segment_source"
@@ -838,14 +872,16 @@ server <- function(input, output, session) {
           rv$res_type <- "double"
           ajouter_log(rv, "Mode : classification double (rainette2).")
 
-          res1 <- rainette(dfm_obj, k = input$k, min_segment_size = input$min_segment_size, min_split_members = input$min_split_members, doc_id = "segment_source")
+          k_effectif <- calculer_k_effectif(dfm_obj, input$k, input$min_split_members, rv)
+
+          res1 <- rainette(dfm_obj, k = k_effectif, min_segment_size = input$min_segment_size, min_split_members = input$min_split_members, doc_id = "segment_source")
           if (is.null(res1) || is.null(res1$group) || length(res1$group) == 0) stop("Classification 1 (rainette) impossible.")
 
-          res2 <- rainette(dfm_obj, k = input$k, min_segment_size = input$min_segment_size2, min_split_members = input$min_split_members, doc_id = "segment_source")
+          res2 <- rainette(dfm_obj, k = k_effectif, min_segment_size = input$min_segment_size2, min_split_members = input$min_split_members, doc_id = "segment_source")
           if (is.null(res2) || is.null(res2$group) || length(res2$group) == 0) stop("Classification 2 (rainette) impossible.")
 
           res_d <- rainette2(res1, res2, max_k = input$max_k_double)
-          groupes <- cutree(res_d, k = input$k)
+          groupes <- cutree(res_d, k = k_effectif)
 
           res_final <- res_d
           rv$res_chd <- res1
