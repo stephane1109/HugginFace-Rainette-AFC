@@ -76,7 +76,8 @@ ui <- fluidPage(
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Supprimer les apostrophes (', ’)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (package Quandeta)", value = FALSE),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
+      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
@@ -88,7 +89,6 @@ ui <- fluidPage(
 
       tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
 
-      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
 
       conditionalPanel(
