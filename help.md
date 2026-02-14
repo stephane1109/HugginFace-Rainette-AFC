@@ -1,12 +1,11 @@
-### Stéphane Meurisse
-### version beta 0.2 - 12-02-2026
-- [codeandcortex.fr](https://www.codeandcortex.fr)
+### Stéphane Meurisse - version beta 0.2 - 12-02-2026
+- <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
 
 ### Rainette développé par Julien Barnier
 
-- [Doc Rainette](https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd)
-- [Vignette CRAN](https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html)
-- [Builds r-universe](https://juba.r-universe.dev/builds)
+- <a href="https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd" target="_blank" rel="noopener noreferrer">Doc Rainette</a>
+- <a href="https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html" target="_blank" rel="noopener noreferrer">Vignette CRAN</a>
+- <a href="https://juba.r-universe.dev/builds" target="_blank" rel="noopener noreferrer">Builds r-universe</a>
 
 ### Pourquoi vos fichiers peuvent disparaître sur Hugging Face
 
@@ -36,7 +35,9 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 
 ### Lemmatisation (option)
 
-- **Lemmatisation** : si activée, le texte est analysé avec Spacy.
+- **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est plus efficace avec IRAMUTEQ.
+
+### Filtrage Morphosyntaxique
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD.
 
 ### Exploration
