@@ -205,7 +205,7 @@ ui <- fluidPage(
         ),
 
         tabPanel(
-          "POS spaCy",
+          "Aide POS/Spacy",
           tags$div(
             style = "padding: 12px;",
             if (file.exists("pos_spacy.md")) {
