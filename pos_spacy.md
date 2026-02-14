@@ -1,6 +1,4 @@
-# Analyse morphosyntaxique avec spaCy dans l'application Rainette-AFC
-
-## Documentation spaCy en français
+# Analyse morphosyntaxique avec spaCy
 
 Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièrement traduite en français. La documentation de référence est en anglais.
 
