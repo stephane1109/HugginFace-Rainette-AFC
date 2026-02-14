@@ -24,9 +24,9 @@ appliquer_nettoyage_et_minuscules <- function(textes,
     x <- gsub("[0-9]+", " ", x, perl = TRUE)
   }
 
-  # Option : suppression des apostrophes droites et typographiques
+  # Option : remplacement de l'apostrophe droite par un espace
   if (isTRUE(supprimer_apostrophes)) {
-    x <- gsub("['’]+", " ", x, perl = TRUE)
+    x <- gsub("'+", " ", x, perl = TRUE)
   }
 
   # Option : nettoyage des caractères "non autorisés"
