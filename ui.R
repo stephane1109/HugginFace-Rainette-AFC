@@ -90,6 +90,7 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
 
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
+      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
 
       conditionalPanel(
         condition = "input.filtrage_morpho == true",
