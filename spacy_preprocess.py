@@ -49,16 +49,13 @@ def ecrire_tokens(chemin: str, lignes: List[dict]) -> None:
             ecrivain.writerow(row)
 
 
-def nettoyer_et_filtrer_doc(doc, pos_keep_set, utiliser_lemmes: bool, retirer_stopwords: bool) -> Tuple[str, List[dict]]:
+def nettoyer_et_filtrer_doc(doc, pos_keep_set, utiliser_lemmes: bool) -> Tuple[str, List[dict]]:
     tokens_sortie: List[str] = []
     lignes_tokens: List[dict] = []
 
     for tok in doc:
         if tok.is_space or tok.is_punct or tok.like_num:
             continue
-        if retirer_stopwords and tok.is_stop:
-            continue
-
         pos = (tok.pos_ or "").upper().strip()
         if pos_keep_set and pos not in pos_keep_set:
             continue
@@ -98,14 +95,12 @@ def main() -> int:
     parser.add_argument("--modele", default="fr_core_news_md", help="Nom du modèle spaCy FR.")
     parser.add_argument("--pos_keep", default="", help="Liste POS à conserver (virgules), ex: NOUN,ADJ,VERB.")
     parser.add_argument("--lemmes", default="0", help="1 pour utiliser token.lemma_, 0 sinon.")
-    parser.add_argument("--retirer_stopwords", default="0", help="1 pour retirer tok.is_stop, 0 sinon.")
     parser.add_argument("--lower_input", default="0", help="1 pour forcer le texte d'entrée en minuscules avant spaCy.")
     parser.add_argument("--output_tokens", default="", help="Chemin TSV optionnel pour exporter tokens (doc_id, token, lemma, pos).")
 
     args = parser.parse_args()
 
     utiliser_lemmes = str(args.lemmes).strip() == "1"
-    retirer_stopwords = str(args.retirer_stopwords).strip() == "1"
     lower_input = str(args.lower_input).strip() == "1"
 
     pos_keep = [p.strip().upper() for p in (args.pos_keep or "").split(",") if p.strip()]
@@ -135,7 +130,6 @@ def main() -> int:
                 doc=doc,
                 pos_keep_set=pos_keep_set,
                 utiliser_lemmes=utiliser_lemmes,
-                retirer_stopwords=retirer_stopwords,
             )
             textes_sortie.append(reconstruit)
 

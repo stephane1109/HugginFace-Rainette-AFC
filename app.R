@@ -296,7 +296,7 @@ verifier_dfm_avant_rainette <- function(dfm_obj, input) {
 
 
 
-executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, retirer_stopwords, lower_input, rv) {
+executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, rv) {
   script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : spacy_preprocess.py (à la racine du projet).")
 
@@ -322,7 +322,6 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
     "--modele", "fr_core_news_md",
     "--pos_keep", paste(pos_a_conserver, collapse = ","),
     "--lemmes", ifelse(isTRUE(utiliser_lemmes), "1", "0"),
-    "--retirer_stopwords", ifelse(isTRUE(retirer_stopwords), "1", "0"),
     "--lower_input", ifelse(isTRUE(lower_input), "1", "0"),
     "--output_tokens", tok_tsv
   )
@@ -348,7 +347,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   list(textes = res[ids], tokens_df = df_tok)
 }
 
-executer_spacy_ner <- function(ids, textes, rv, retirer_stopwords = TRUE) {
+executer_spacy_ner <- function(ids, textes, rv) {
   script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : ner.py (à la racine du projet).")
 
@@ -368,8 +367,7 @@ executer_spacy_ner <- function(ids, textes, rv, retirer_stopwords = TRUE) {
     script_ner,
     "--input", in_tsv,
     "--output", out_tsv,
-    "--modele", "fr_core_news_md",
-    "--retirer_stopwords", ifelse(isTRUE(retirer_stopwords), "1", "0")
+    "--modele", "fr_core_news_md"
   )
 
   ajouter_log(rv, paste0("NER : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
@@ -754,7 +752,6 @@ server <- function(input, output, session) {
 
         filtrage_morpho <- isTRUE(input$filtrage_morpho)
         utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
-        retirer_stopwords_spacy <- isTRUE(input$spacy_retirer_stopwords)
         utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes
 
         if (!utiliser_pipeline_spacy) {
@@ -787,7 +784,7 @@ server <- function(input, output, session) {
               "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
               ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
-              " | stopwords_spacy(tok.is_stop)=0 (CHD: stopwords Quanteda uniquement)"
+              " | stopwords: Quanteda uniquement"
             )
           )
 
@@ -799,7 +796,6 @@ server <- function(input, output, session) {
             textes = unname(textes_chd),
             pos_a_conserver = pos_a_conserver,
             utiliser_lemmes = utiliser_lemmes,
-            retirer_stopwords = FALSE,
             lower_input = isTRUE(input$forcer_minuscules_avant),
             rv = rv
           )
@@ -923,8 +919,7 @@ server <- function(input, output, session) {
           df_ent <- executer_spacy_ner(
             ids_ner,
             textes_ner,
-            rv,
-            retirer_stopwords = retirer_stopwords_spacy
+            rv
           )
 
           classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)
