@@ -382,8 +382,8 @@ obtenir_stopwords_fr <- local({
       }
     }
 
-    cache <<- stopwords("fr")
-    if (!is.null(rv)) ajouter_log(rv, "Impossible de charger les stopwords spaCy, fallback sur stopwords français par défaut.")
+    cache <<- character(0)
+    if (!is.null(rv)) ajouter_log(rv, "Impossible de charger les stopwords spaCy : aucun stopword ne sera retiré.")
     cache
   }
 })

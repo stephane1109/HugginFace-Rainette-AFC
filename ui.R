@@ -77,6 +77,7 @@ ui <- fluidPage(
       checkboxInput("supprimer_apostrophes", "Supprimer les apostrophes (', ’)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
+      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
