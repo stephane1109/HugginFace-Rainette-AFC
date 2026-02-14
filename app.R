@@ -193,7 +193,7 @@ construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retire
   ajouter_log(rv, paste0(libelle, " : tokens (avant stopwords) = ", n_base))
 
   if (isTRUE(retirer_stopwords)) {
-    tok_sw <- tokens_remove(tok_base, stopwords("fr"))
+    tok_sw <- tokens_remove(tok_base, obtenir_stopwords_fr(rv))
     tok_sw <- tokens_tolower(tok_sw)
     n_sw <- compter_tokens(tok_sw)
     ajouter_log(rv, paste0(libelle, " : tokens (après stopwords) = ", n_sw))
@@ -346,6 +346,47 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   res <- setNames(df_out$text, df_out$doc_id)
   list(textes = res[ids], tokens_df = df_tok)
 }
+
+obtenir_stopwords_fr <- local({
+  cache <- NULL
+
+  function(rv = NULL) {
+    if (!is.null(cache)) return(cache)
+
+    python_cmd <- Sys.which("python3")
+    if (!nzchar(python_cmd)) python_cmd <- Sys.which("python")
+
+    if (nzchar(python_cmd)) {
+      py_code <- paste(
+        "from spacy.lang.fr.stop_words import STOP_WORDS",
+        "for w in sorted(STOP_WORDS):",
+        "    print(w)",
+        sep = "\n"
+      )
+
+      sortie <- tryCatch(
+        system2(python_cmd, args = c("-c", shQuote(py_code)), stdout = TRUE, stderr = TRUE),
+        error = function(e) character(0)
+      )
+
+      if (length(sortie) > 0) {
+        stopwords_spacy <- trimws(sortie)
+        stopwords_spacy <- stopwords_spacy[nzchar(stopwords_spacy)]
+        stopwords_spacy <- stopwords_spacy[!grepl("^Traceback", stopwords_spacy)]
+
+        if (length(stopwords_spacy) > 0) {
+          cache <<- unique(stopwords_spacy)
+          if (!is.null(rv)) ajouter_log(rv, paste0("Stopwords chargés depuis spaCy (", length(cache), " termes)."))
+          return(cache)
+        }
+      }
+    }
+
+    cache <<- stopwords("fr")
+    if (!is.null(rv)) ajouter_log(rv, "Impossible de charger les stopwords spaCy, fallback sur stopwords français par défaut.")
+    cache
+  }
+})
 
 executer_spacy_ner <- function(ids, textes, rv) {
   script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
@@ -789,7 +830,7 @@ server <- function(input, output, session) {
               "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
               ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
-              " | stopwords: Quanteda uniquement"
+              " | stopwords: spaCy"
             )
           )
 
@@ -820,7 +861,7 @@ server <- function(input, output, session) {
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
-            retirer_stopwords = FALSE,
+            retirer_stopwords = isTRUE(input$retirer_stopwords),
             rv = rv,
             libelle = "spaCy"
           )
