@@ -72,7 +72,7 @@ ui <- fluidPage(
       tags$div(class = "sidebar-section-title", "Nettoyage"),
 
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
-      checkboxInput("supprimer_ponctuation", "Supprimer la ponctuation", value = TRUE),
+      checkboxInput("supprimer_ponctuation", "Supprimer la ponctuation", value = FALSE),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Supprimer les apostrophes (', ’)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
