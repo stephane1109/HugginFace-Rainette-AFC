@@ -1,5 +1,6 @@
-# Stéphane Meurisse - version beta 0.2 - 12-02-2026
-- [codeandcortex.fr](https://www.codeandcortex.fr)
+[Stéphane Meurisse](https://www.codeandcortex.fr)
+
+---
 
 ## Rainette développé par Julien Barnier
 

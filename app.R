@@ -26,22 +26,6 @@ library(htmltools)
 options(shiny.maxRequestSize = 300 * 1024^2)
 options(shinygadgets.viewer = shiny::browserViewer())
 
-if (file.exists("help.md")) {
-  ui_aide_huggingface <- function() {
-    tagList(
-      tags$h2("Aide"),
-      includeMarkdown("help.md")
-    )
-  }
-} else {
-  ui_aide_huggingface <- function() {
-    tagList(
-      tags$h2("Aide"),
-      tags$p("Le fichier help.md est introuvable. Ajoute help.md à la racine du projet.")
-    )
-  }
-}
-
 source("nettoyage.R", encoding = "UTF-8")
 source("concordancier.R", encoding = "UTF-8")
 source("afc.R", encoding = "UTF-8")

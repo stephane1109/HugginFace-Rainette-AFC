@@ -201,7 +201,14 @@ ui <- fluidPage(
 
         tabPanel(
           "Aide",
-          ui_aide_huggingface()
+          tags$div(
+            style = "padding: 12px;",
+            if (file.exists("help.md")) {
+              includeMarkdown("help.md")
+            } else {
+              tags$p("Le fichier help.md est introuvable à la racine du projet.")
+            }
+          )
         ),
 
         tabPanel(
