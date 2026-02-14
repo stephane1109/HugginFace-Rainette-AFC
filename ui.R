@@ -3,6 +3,24 @@
 library(shiny)
 library(htmltools)
 
+if (!exists("ui_aide_huggingface", mode = "function")) {
+  if (file.exists("help.md")) {
+    ui_aide_huggingface <- function() {
+      tagList(
+        tags$h2("Aide"),
+        includeMarkdown("help.md")
+      )
+    }
+  } else {
+    ui_aide_huggingface <- function() {
+      tagList(
+        tags$h2("Aide"),
+        tags$p("Le fichier help.md est introuvable. Ajoute help.md à la racine du projet.")
+      )
+    }
+  }
+}
+
 ui <- fluidPage(
   tags$head(
     tags$style(HTML("
