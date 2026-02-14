@@ -1,23 +1,24 @@
-# Stéphane Meurisse - version beta 0.2 - 12-02-2026
+### Stéphane Meurisse
+### version beta 0.2 - 12-02-2026
 - [codeandcortex.fr](https://www.codeandcortex.fr)
 
-## Rainette développé par Julien Barnier
+### Rainette développé par Julien Barnier
 
 - [Doc Rainette](https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd)
 - [Vignette CRAN](https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html)
 - [Builds r-universe](https://juba.r-universe.dev/builds)
 
-## Pourquoi vos fichiers peuvent disparaître sur Hugging Face
+### Pourquoi vos fichiers peuvent disparaître sur Hugging Face
 
 Sur Hugging Face Spaces, le stockage local de ce conteneur est temporaire : si le serveur redémarre, ou si la page est rechargée après une déconnexion, les fichiers générés pendant une analyse précédente peuvent ne plus être disponibles.
 
 Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse.
 
-## Logique générale de l’application
+### Logique générale de l’application
 
 Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné, puis produit des images (nuages de mots et réseaux de cooccurrences). L’onglet d’exploration (rainette_explor) permet de visualiser la CHD.
 
-## Paramètres de l’analyse
+### Paramètres de l’analyse
 
 - **segment_size** : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs.
 - **k (nombre de classes)** : nombre de classes demandé pour la CHD.
@@ -29,16 +30,16 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 - **window (cooccurrences)** : taille de la fenêtre glissante pour calculer les cooccurrences.
 - **top_feat (cooccurrences)** : nombre de termes retenus pour construire le réseau de cooccurrences.
 
-## Classification double (rainette2)
+### Classification double (rainette2)
 
 - **Classification double** : l’application combine deux classifications rainette (res1 et res2) via rainette2, puis découpe l’arbre final avec k.
 
-## Lemmatisation (option)
+### Lemmatisation (option)
 
 - **Lemmatisation** : si activée, le texte est analysé avec Spacy.
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD.
 
-## Exploration
+### Exploration
 
 - **Classe** : sélection de la classe pour afficher les images et la table de statistiques associées.
 - **CHD (rainette_plot)** : affichage graphique de la CHD dans l’application.
