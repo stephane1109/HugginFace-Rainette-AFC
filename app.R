@@ -26,17 +26,6 @@ library(htmltools)
 options(shiny.maxRequestSize = 300 * 1024^2)
 options(shinygadgets.viewer = shiny::browserViewer())
 
-if (file.exists("help.R")) {
-  source("help.R", encoding = "UTF-8")
-} else {
-  ui_aide_huggingface <- function() {
-    tagList(
-      tags$h2("Aide"),
-      tags$p("Le fichier help.R est introuvable. Ajoute help.R à la racine du projet.")
-    )
-  }
-}
-
 source("nettoyage.R", encoding = "UTF-8")
 source("concordancier.R", encoding = "UTF-8")
 source("afc.R", encoding = "UTF-8")
