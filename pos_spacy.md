@@ -31,7 +31,6 @@ Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièr
 
 Le prétraitement spaCy est réalisé par le script `spacy_preprocess.py` avec le modèle français `fr_core_news_md`.
 
-
 ### 1) Filtrage des tokens
 
 Pour chaque token, le script :
@@ -44,7 +43,6 @@ Pour chaque token, le script :
 6. reconstruit un texte nettoyé par document.
 
 ### 2) Résultat produit
-
 
 ## Paramétrage côté interface (Shiny)
 
@@ -61,4 +59,3 @@ Par défaut, un réglage fréquent pour des analyses lexicales (thèmes, AFC, co
 - Pour une analyse thématique : commencer par `NOUN,VERB,ADJ`.
 - Pour préserver les noms d’organisations/personnes : ajouter `PROPN`.
 - Pour éviter le bruit grammatical : exclure en général `DET`, `PRON`, `CCONJ`, `SCONJ`, `PART`.
-- Toujours vérifier un échantillon de tokens exportés (`--output_tokens`) avant de figer les réglages.
