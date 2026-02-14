@@ -1,4 +1,4 @@
-# Analyse morphosyntaxique avec spaCy dans l'application Rainette-AFC
+# Analyse morphosyntaxique avec spaCy
 
 - Documentation principale : <https://spacy.io/usage>
 - Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
