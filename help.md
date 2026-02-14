@@ -4,7 +4,7 @@
 ### Rainette développé par Julien Barnier
 
 - <a href="https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd" target="_blank" rel="noopener noreferrer">Doc Rainette</a>
-- <a href="https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html" target="_blank" rel="noopener noreferrer">Vignette CRAN</a>
+- <a href="https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html" target="_blank" rel="noopener noreferrer">Utilisation de rainette</a>
 - <a href="https://juba.r-universe.dev/builds" target="_blank" rel="noopener noreferrer">Builds r-universe</a>
 
 ### Pourquoi vos fichiers peuvent disparaître sur Hugging Face
