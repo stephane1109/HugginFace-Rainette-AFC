@@ -1,9 +1,9 @@
-# Analyse morphosyntaxique avec spaCy
+### Analyse morphosyntaxique avec spaCy
 
 - Documentation principale : <https://spacy.io/usage>
 - Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
 
-## Traduction FR des POS (spaCy / Universal POS)
+### Traduction FR des POS (spaCy / Universal POS)
 
 - **ADJ** : adjectif
 - **ADP** : adposition (préposition)
@@ -24,7 +24,7 @@
 - **X** : autre / catégorie inconnue
 
 
-## Paramétrage côté interface (Shiny)
+### Paramétrage côté interface (Shiny)
 
 Dans l’interface, la section **Paramétrages SpaCy** permet :
 
@@ -34,7 +34,7 @@ Dans l’interface, la section **Paramétrages SpaCy** permet :
 
 Par défaut, un réglage fréquent pour des analyses lexicales (thèmes, AFC, cooccurrences) est de conserver surtout les catégories porteuses de sens, par exemple `NOUN`, `VERB`, `ADJ`, éventuellement `PROPN`.
 
-## Conseils pratiques
+### Conseils pratiques
 
 - Pour une analyse thématique : commencer par `NOUN,VERB,ADJ`.
 - Pour préserver les noms d’organisations/personnes : ajouter `PROPN`.
