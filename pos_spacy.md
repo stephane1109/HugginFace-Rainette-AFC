@@ -1,10 +1,15 @@
-# Analyse morphosyntaxique avec spaCy
+# Analyse morphosyntaxique avec spaCy dans l'application Rainette-AFC
+
+## À propos de la documentation spaCy en français
 
 Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièrement traduite en français. La documentation de référence est en anglais.
+
+Dans l’application, on peut néanmoins s’appuyer sur les catégories **POS** standard de spaCy (Universal POS) et sur leur traduction française pour paramétrer le filtrage morphosyntaxique de manière fiable.
 
 ## Liens utiles spaCy
 
 - Documentation principale : <https://spacy.io/usage>
+- API Token (`token.pos_`, `token.tag_`) : <https://spacy.io/api/token>
 - Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
 
 ## Traduction FR des POS (spaCy / Universal POS)
@@ -17,7 +22,7 @@ Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièr
 - **DET** : déterminant
 - **INTJ** : interjection
 - **NOUN** : nom
-- **NUM** : nombre
+- **NUM** : numéral
 - **PART** : particule
 - **PRON** : pronom
 - **PROPN** : nom propre
@@ -27,22 +32,6 @@ Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièr
 - **VERB** : verbe
 - **X** : autre / catégorie inconnue
 
-## Comment l’analyse morphosyntaxique fonctionne dans l’application
-
-Le prétraitement spaCy est réalisé par le script `spacy_preprocess.py` avec le modèle français `fr_core_news_md`.
-
-### 1) Filtrage des tokens
-
-Pour chaque token, le script :
-
-1. élimine les espaces, la ponctuation et les nombres,
-2. lit l’étiquette POS via `tok.pos_`,
-3. applique le filtre POS si `pos_keep` est renseigné,
-4. conserve soit le lemme soit la forme token selon l’option,
-5. met en minuscules la forme retenue,
-6. reconstruit un texte nettoyé par document.
-
-### 2) Résultat produit
 
 ## Paramétrage côté interface (Shiny)
 

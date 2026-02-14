@@ -205,6 +205,18 @@ ui <- fluidPage(
         ),
 
         tabPanel(
+          "POS spaCy",
+          tags$div(
+            style = "padding: 12px;",
+            if (file.exists("pos_spacy.md")) {
+              includeMarkdown("pos_spacy.md")
+            } else {
+              tags$p("Le fichier pos_spacy.md est introuvable à la racine du projet.")
+            }
+          )
+        ),
+
+        tabPanel(
           "Readme (Rainette.md)",
           tags$div(
             style = "padding: 12px;",
