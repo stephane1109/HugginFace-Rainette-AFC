@@ -758,7 +758,11 @@ server <- function(input, output, session) {
         if (!utiliser_pipeline_spacy) {
 
           ajouter_log(rv, "Filtrage morphosyntaxique désactivé : pipeline standard.")
-          tok_base <- tokens(textes_chd, remove_punct = TRUE, remove_numbers = isTRUE(input$supprimer_chiffres))
+          tok_base <- tokens(
+            textes_chd,
+            remove_punct = isTRUE(input$supprimer_ponctuation),
+            remove_numbers = isTRUE(input$supprimer_chiffres)
+          )
           tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
@@ -806,7 +810,11 @@ server <- function(input, output, session) {
           rv$spacy_tokens_df <- sp$tokens_df
 
           avancer(0.40, "spaCy : tokens + DFM")
-          tok_base <- tokens(textes_spacy, remove_punct = TRUE, remove_numbers = isTRUE(input$supprimer_chiffres))
+          tok_base <- tokens(
+            textes_spacy,
+            remove_punct = isTRUE(input$supprimer_ponctuation),
+            remove_numbers = isTRUE(input$supprimer_chiffres)
+          )
           tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
