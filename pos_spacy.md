@@ -15,13 +15,13 @@ Dans l’application, on peut néanmoins s’appuyer sur les catégories **POS**
 ## Traduction FR des POS (spaCy / Universal POS)
 
 - **ADJ** : adjectif
-- **ADP** : adposition (préposition / postposition)
+- **ADP** : adposition (préposition)
 - **ADV** : adverbe
 - **AUX** : auxiliaire
 - **CCONJ** : conjonction de coordination
 - **DET** : déterminant
 - **INTJ** : interjection
-- **NOUN** : nom commun
+- **NOUN** : nom
 - **NUM** : numéral
 - **PART** : particule
 - **PRON** : pronom
@@ -32,37 +32,6 @@ Dans l’application, on peut néanmoins s’appuyer sur les catégories **POS**
 - **VERB** : verbe
 - **X** : autre / catégorie inconnue
 
-## Comment l’analyse morphosyntaxique fonctionne dans l’application
-
-Dans Rainette-AFC, le prétraitement spaCy est réalisé par le script `spacy_preprocess.py` avec le modèle français `fr_core_news_md`.
-
-### 1) Chargement du modèle et options
-
-Le script accepte notamment :
-
-- `--modele` : modèle spaCy (par défaut `fr_core_news_md`)
-- `--pos_keep` : liste des POS à conserver, séparées par des virgules (ex. `NOUN,ADJ,VERB`)
-- `--lemmes` : `1` pour utiliser les lemmes (`token.lemma_`), sinon la forme de surface
-- `--lower_input` : `1` pour forcer le texte en minuscules avant traitement
-- `--output_tokens` : export optionnel d’un TSV détaillant `doc_id`, `token`, `lemma`, `pos`
-
-### 2) Filtrage des tokens
-
-Pour chaque token, le script :
-
-1. élimine les espaces, la ponctuation et les nombres,
-2. lit l’étiquette POS via `tok.pos_`,
-3. applique le filtre POS si `pos_keep` est renseigné,
-4. conserve soit le lemme soit la forme token selon l’option,
-5. met en minuscules la forme retenue,
-6. reconstruit un texte nettoyé par document.
-
-### 3) Résultat produit
-
-Le script génère :
-
-- un TSV de sortie (`doc_id`, `text`) contenant le texte reconstruit après filtrage,
-- éventuellement un TSV détaillé des tokens (utile pour audit linguistique).
 
 ## Paramétrage côté interface (Shiny)
 
@@ -79,4 +48,3 @@ Par défaut, un réglage fréquent pour des analyses lexicales (thèmes, AFC, co
 - Pour une analyse thématique : commencer par `NOUN,VERB,ADJ`.
 - Pour préserver les noms d’organisations/personnes : ajouter `PROPN`.
 - Pour éviter le bruit grammatical : exclure en général `DET`, `PRON`, `CCONJ`, `SCONJ`, `PART`.
-- Toujours vérifier un échantillon de tokens exportés (`--output_tokens`) avant de figer les réglages.
