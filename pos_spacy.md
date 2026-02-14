@@ -32,8 +32,6 @@ Dans l’interface, la section **Paramétrages SpaCy** permet :
 - de sélectionner les POS à conserver parmi la liste Universal POS,
 - de combiner ce filtrage avec la lemmatisation selon les besoins analytiques.
 
-Par défaut, un réglage fréquent pour des analyses lexicales (thèmes, AFC, cooccurrences) est de conserver surtout les catégories porteuses de sens, par exemple `NOUN`, `VERB`, `ADJ`, éventuellement `PROPN`.
-
 ### Conseils pratiques
 
 - Pour une analyse thématique : commencer par `NOUN,VERB,ADJ`.
