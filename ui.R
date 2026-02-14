@@ -75,9 +75,8 @@ ui <- fluidPage(
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
       checkboxInput("supprimer_apostrophes", "Supprimer les apostrophes (', ’)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
-      checkboxInput("retirer_stopwords", "Retirer les stopwords (liste FR) – pipeline standard", value = FALSE),
+      checkboxInput("retirer_stopwords", "Retirer les stopwords (package Quandeta)", value = FALSE),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
-      checkboxInput("spacy_retirer_stopwords", "NER : retirer les entités composées uniquement de stopwords spaCy", value = TRUE),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
