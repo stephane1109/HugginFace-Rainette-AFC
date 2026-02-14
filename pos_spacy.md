@@ -1,15 +1,6 @@
 # Analyse morphosyntaxique avec spaCy dans l'application Rainette-AFC
 
-## À propos de la documentation spaCy en français
-
-Il n’existe pas (à ma connaissance) de documentation officielle spaCy entièrement traduite en français. La documentation de référence est en anglais.
-
-Dans l’application, on peut néanmoins s’appuyer sur les catégories **POS** standard de spaCy (Universal POS) et sur leur traduction française pour paramétrer le filtrage morphosyntaxique de manière fiable.
-
-## Liens utiles spaCy
-
 - Documentation principale : <https://spacy.io/usage>
-- API Token (`token.pos_`, `token.tag_`) : <https://spacy.io/api/token>
 - Linguistic Features (POS, morphology) : <https://spacy.io/usage/linguistic-features>
 
 ## Traduction FR des POS (spaCy / Universal POS)
