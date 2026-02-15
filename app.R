@@ -1376,6 +1376,47 @@ server <- function(input, output, session) {
           }, silent = TRUE)
         }
 
+        explor_assets <- NULL
+        ok_chd_png <- generer_chd_explor_si_absente(rv)
+
+        chd_png_rel <- NULL
+        if (isTRUE(ok_chd_png) && file.exists(file.path(rv$export_dir, "explor", "chd.png"))) {
+          chd_png_rel <- file.path("explor", "chd.png")
+        }
+
+        wc_files <- list.files(wordcloud_dir, pattern = "\\.png$", full.names = FALSE)
+        if (length(wc_files) > 0) {
+          wc_classes <- gsub("^cluster_([0-9]+)_wordcloud\\.png$", "\\1", wc_files)
+          wordclouds_df <- data.frame(
+            classe = wc_classes,
+            src = file.path("wordclouds", wc_files),
+            stringsAsFactors = FALSE
+          )
+          wordclouds_df <- wordclouds_df[order(suppressWarnings(as.integer(wordclouds_df$classe))), , drop = FALSE]
+        } else {
+          wordclouds_df <- data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
+        }
+
+        cooc_files <- list.files(cooc_dir, pattern = "\\.png$", full.names = FALSE)
+        if (length(cooc_files) > 0) {
+          cooc_classes <- gsub("^cluster_([0-9]+)_fcm_network\\.png$", "\\1", cooc_files)
+          coocs_df <- data.frame(
+            classe = cooc_classes,
+            src = file.path("cooccurrences", cooc_files),
+            stringsAsFactors = FALSE
+          )
+          coocs_df <- coocs_df[order(suppressWarnings(as.integer(coocs_df$classe))), , drop = FALSE]
+        } else {
+          coocs_df <- data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
+        }
+
+        explor_assets <- list(
+          chd = chd_png_rel,
+          wordclouds = wordclouds_df,
+          coocs = coocs_df
+        )
+        rv$explor_assets <- explor_assets
+
         args_concordancier <- list(
           chemin_sortie = html_file,
           segments_by_class = segments_by_class,
@@ -1383,6 +1424,7 @@ server <- function(input, output, session) {
           max_p = input$max_p,
           textes_indexation = textes_index_ok,
           spacy_tokens_df = rv$spacy_tokens_df,
+          explor_assets = explor_assets,
           avancer = avancer,
           rv = rv
         )
@@ -1786,6 +1828,7 @@ server <- function(input, output, session) {
       file.copy(zip_tmp, file, overwrite = TRUE)
     }
   )
+
 }
 
 shinyApp(ui = ui, server = server)
