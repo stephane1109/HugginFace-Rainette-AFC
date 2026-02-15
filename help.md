@@ -56,8 +56,6 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 - **Classe** : sélection de la classe pour afficher les images et la table de statistiques associées.
 - **CHD (rainette_plot)** : affichage graphique de la CHD dans l’application.
 - **Type** : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe.
-- **Statistiques** : chi2, lr, frequency, docprop selon le critère utilisé pour classer les termes.
+- **Statistiques** : chi2, lr, frequency, selon le critère utilisé pour classer les termes.
 - **Nombre de termes** : nombre de termes affichés par classe dans la visualisation.
-- **Forcer les mêmes échelles** : rend les panneaux comparables entre classes en imposant une échelle commune.
 - **Afficher les valeurs négatives** : inclut les termes négativement associés à une classe.
-- **Taille du texte** : taille des labels dans la visualisation.
