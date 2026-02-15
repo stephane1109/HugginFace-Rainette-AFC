@@ -554,6 +554,22 @@ generer_chd_explor_si_absente <- function(rv) {
   dfm_obj <- rv$dfm_chd
   err_msg <- NULL
 
+  ecrire_png_secours <- function(message = NULL) {
+    grDevices::png(chd_png, width = 2000, height = 1500, res = 180)
+    tryCatch({
+      plot.new()
+      title("CHD (export)")
+      txt <- "CHD indisponible pour cet export."
+      if (!is.null(message) && nzchar(message)) {
+        txt <- paste0(txt, "\n", message)
+      }
+      text(0.5, 0.5, txt, cex = 1.1)
+    }, finally = {
+      try(grDevices::dev.off(), silent = TRUE)
+    })
+    file.exists(chd_png) && is.finite(file.info(chd_png)$size) && file.info(chd_png)$size > 0
+  }
+
   dessiner_chd <- function(avec_dfm = FALSE) {
     grDevices::png(chd_png, width = 2000, height = 1500, res = 180)
     ok_plot <- FALSE
@@ -603,11 +619,47 @@ generer_chd_explor_si_absente <- function(rv) {
       ajouter_log(rv, paste0("CHD PNG non généré (", msg, ")."))
     }
     if (file.exists(chd_png)) unlink(chd_png)
+
+    ok_fallback <- ecrire_png_secours(err_msg)
+    if (ok_fallback) {
+      if (!is.null(rv)) ajouter_log(rv, paste0("CHD PNG de secours généré : ", chd_png))
+      ok <- TRUE
+    }
   } else if (!is.null(rv)) {
     ajouter_log(rv, paste0("CHD PNG généré : ", chd_png))
   }
 
   ok
+}
+
+generer_chd_html_explor <- function(rv, chd_png_rel = NULL) {
+  if (is.null(rv$export_dir) || !nzchar(rv$export_dir)) return(NULL)
+
+  explor_dir <- file.path(rv$export_dir, "explor")
+  dir.create(explor_dir, showWarnings = FALSE, recursive = TRUE)
+
+  chd_html <- file.path(explor_dir, "chd.html")
+  img_part <- "<p><em>CHD non disponible dans l'export.</em></p>"
+  if (!is.null(chd_png_rel) && nzchar(chd_png_rel)) {
+    img_src <- basename(chd_png_rel)
+    img_part <- paste0("<p><img src='", img_src, "' style='max-width:100%;height:auto;border:1px solid #ddd;'/></p>")
+  }
+
+  con <- file(chd_html, open = "wt", encoding = "UTF-8")
+  on.exit(try(close(con), silent = TRUE), add = TRUE)
+
+  writeLines("<html><head><meta charset='utf-8'/><title>CHD Rainette</title>", con)
+  writeLines("<style>body{font-family:Arial,sans-serif;margin:20px;} h1{margin-top:0;}</style>", con)
+  writeLines("</head><body>", con)
+  writeLines("<h1>CHD (Rainette)</h1>", con)
+  writeLines(img_part, con)
+  writeLines("</body></html>", con)
+
+  if (!file.exists(chd_html)) return(NULL)
+  if (!is.finite(file.info(chd_html)$size) || file.info(chd_html)$size <= 0) return(NULL)
+
+  if (!is.null(rv)) ajouter_log(rv, paste0("CHD HTML généré : ", chd_html))
+  file.path("explor", "chd.html")
 }
 
 server <- function(input, output, session) {
@@ -1427,6 +1479,7 @@ server <- function(input, output, session) {
         if (isTRUE(ok_chd_png) && file.exists(file.path(rv$export_dir, "explor", "chd.png"))) {
           chd_png_rel <- file.path("explor", "chd.png")
         }
+        chd_html_rel <- generer_chd_html_explor(rv, chd_png_rel)
 
         wc_files <- list.files(wordcloud_dir, pattern = "\\.png$", full.names = FALSE)
         if (length(wc_files) > 0) {
@@ -1456,6 +1509,7 @@ server <- function(input, output, session) {
 
         explor_assets <- list(
           chd = chd_png_rel,
+          chd_html = chd_html_rel,
           wordclouds = wordclouds_df,
           coocs = coocs_df
         )
