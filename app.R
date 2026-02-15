@@ -551,16 +551,60 @@ generer_chd_explor_si_absente <- function(rv) {
   if (is.null(chd_obj)) chd_obj <- rv$res
   if (is.null(chd_obj)) return(FALSE)
 
-  ok <- FALSE
-  try({
-    png(chd_png, width = 2000, height = 1500, res = 180)
-    rainette_plot(chd_obj)
-    dev.off()
-    ok <- file.exists(chd_png)
-  }, silent = TRUE)
+  dfm_obj <- rv$dfm_chd
+  err_msg <- NULL
+
+  dessiner_chd <- function(avec_dfm = FALSE) {
+    grDevices::png(chd_png, width = 2000, height = 1500, res = 180)
+    ok_plot <- FALSE
+
+    tryCatch({
+      if (isTRUE(avec_dfm) && !is.null(dfm_obj)) {
+        k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
+        if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) {
+          if (!is.null(chd_obj$group)) {
+            k_plot <- suppressWarnings(max(as.integer(chd_obj$group), na.rm = TRUE))
+          }
+        }
+        if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) k_plot <- 2L
+
+        rainette_plot(
+          chd_obj,
+          dfm_obj,
+          k = k_plot,
+          measure = "chi2",
+          type = "bar",
+          n_terms = 20,
+          same_scales = TRUE,
+          show_negative = FALSE,
+          text_size = 12
+        )
+      } else {
+        rainette_plot(chd_obj)
+      }
+      ok_plot <- TRUE
+    }, error = function(e) {
+      err_msg <<- conditionMessage(e)
+    }, finally = {
+      try(grDevices::dev.off(), silent = TRUE)
+    })
+
+    isTRUE(ok_plot) && file.exists(chd_png) && is.finite(file.info(chd_png)$size) && file.info(chd_png)$size > 0
+  }
+
+  ok <- dessiner_chd(avec_dfm = FALSE)
+  if (!ok && !is.null(dfm_obj)) {
+    ok <- dessiner_chd(avec_dfm = TRUE)
+  }
 
   if (!ok) {
-    try(grDevices::dev.off(), silent = TRUE)
+    if (!is.null(rv)) {
+      msg <- if (!is.null(err_msg) && nzchar(err_msg)) err_msg else "raison inconnue"
+      ajouter_log(rv, paste0("CHD PNG non généré (", msg, ")."))
+    }
+    if (file.exists(chd_png)) unlink(chd_png)
+  } else if (!is.null(rv)) {
+    ajouter_log(rv, paste0("CHD PNG généré : ", chd_png))
   }
 
   ok
