@@ -1228,7 +1228,18 @@ server <- function(input, output, session) {
           arrange(Classe, desc(chi2))
 
         stats_file <- file.path(rv$export_dir, "stats_par_classe.csv")
-        write.csv(res_stats_df, stats_file, row.names = FALSE)
+        res_stats_export <- res_stats_df
+        cols_num_export <- names(res_stats_export)[vapply(res_stats_export, is.numeric, logical(1))]
+        cols_num_export <- setdiff(cols_num_export, "Classe")
+        for (cn in cols_num_export) {
+          vals <- res_stats_export[[cn]]
+          res_stats_export[[cn]] <- ifelse(
+            is.na(vals),
+            NA_character_,
+            formatC(vals, format = "f", digits = 6)
+          )
+        }
+        write.csv(res_stats_export, stats_file, row.names = FALSE)
 
         rv$segments_file <- segments_file
         rv$stats_file <- stats_file
