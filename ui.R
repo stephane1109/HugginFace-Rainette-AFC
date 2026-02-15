@@ -70,6 +70,17 @@ ui <- fluidPage(
       numericInput("min_docfreq", "Fréquence minimale des termes (min_docfreq)", value = 3, min = 1, step = 1),
       numericInput("max_p", "max_p (p-value)", value = 0.05, min = 0, max = 1, step = 0.01),
 
+      tags$div(class = "sidebar-section-title", "Dictionnaire spaCy"),
+      radioButtons(
+        "spacy_langue",
+        "Langue du corpus",
+        choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+        selected = "fr",
+        inline = FALSE
+      ),
+      tags$small("Ce choix est utilisé pour le prétraitement spaCy, les stopwords et le NER."),
+      uiOutput("ui_spacy_langue_detection"),
+
       radioButtons(
         "type_classification",
         "Type de classification",
