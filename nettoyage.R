@@ -24,9 +24,11 @@ appliquer_nettoyage_et_minuscules <- function(textes,
     x <- gsub("[0-9]+", " ", x, perl = TRUE)
   }
 
-  # Option : remplacement des apostrophes (droite + typographique) par un espace
+  # Option : traitement des élisions françaises en début de mot (m', l', d', n', t', s', c', j', qu')
+  # Exemple : "c'est" -> "est", "m'ecrire" -> "ecrire"
+  # Les apostrophes lexicales internes (ex. "aujourd'hui") sont conservées.
   if (isTRUE(supprimer_apostrophes)) {
-    x <- gsub("['’]+", " ", x, perl = TRUE)
+    x <- gsub("(?i)\\b(?:[cdjlmnst]|qu)['’](?=\\p{L})", "", x, perl = TRUE)
   }
 
   # Option : nettoyage des caractères "non autorisés"
