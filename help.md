@@ -1,4 +1,4 @@
-### Stéphane Meurisse - version beta 0.2 - 12-02-2026
+### codeandcortex.fr - Stéphane Meurisse - version beta 0.2 - 12-02-2026
 - <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
 
 ### IRaMuTeQ
