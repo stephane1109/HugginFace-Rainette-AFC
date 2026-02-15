@@ -96,21 +96,6 @@ ui <- fluidPage(
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
-      checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
-
-      tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
-      tags$pre(
-        style = "white-space: pre-wrap; font-size: 11px; border: 1px solid #ddd; padding: 6px;",
-        REGEX_CARACTERES_A_SUPPRIMER
-      ),
-      tags$small("Interprétation : les caractères présents dans la liste entre crochets sont conservés ; tous les autres (ex. @ # & / emoji) sont remplacés par des espaces."),
-      tags$small("Note : l'option “Supprimer la ponctuation” pilote remove_punct, même si elle est autorisée par la regex ci-dessus."),
-
-      tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
-
-      checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
-      checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
-
       conditionalPanel(
         condition = "input.filtrage_morpho == true",
         selectizeInput(
@@ -125,6 +110,19 @@ ui <- fluidPage(
           options = list(plugins = list("remove_button"))
         )
       ),
+      checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
+
+      tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
+      tags$pre(
+        style = "white-space: pre-wrap; font-size: 11px; border: 1px solid #ddd; padding: 6px;",
+        REGEX_CARACTERES_A_SUPPRIMER
+      ),
+      tags$small("Interprétation : les caractères présents dans la liste entre crochets sont conservés ; tous les autres (ex. @ # & / emoji) sont remplacés par des espaces."),
+      tags$small("Note : l'option “Supprimer la ponctuation” pilote remove_punct, même si elle est autorisée par la regex ci-dessus."),
+
+      tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
+
+      checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
 
       tags$hr(),
 
