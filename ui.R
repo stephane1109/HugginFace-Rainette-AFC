@@ -173,6 +173,22 @@ ui <- fluidPage(
         id = "onglets_principaux",
 
         tabPanel(
+          "Dictionnaire spaCy",
+          tags$div(
+            style = "padding: 12px;",
+            tags$h3("Choix du dictionnaire spaCy"),
+            radioButtons(
+              "spacy_langue",
+              "Langue du corpus",
+              choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+              selected = "fr"
+            ),
+            tags$p("Ce choix est utilisé pour le prétraitement spaCy, les stopwords et le NER."),
+            uiOutput("ui_spacy_langue_detection")
+          )
+        ),
+
+        tabPanel(
           "Analyse",
           tags$h3("Statut"),
           textOutput("statut"),

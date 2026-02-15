@@ -302,6 +302,58 @@ verifier_dfm_avant_rainette <- function(dfm_obj, input) {
 
 
 
+
+
+estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
+  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+
+  textes <- as.character(textes)
+  textes <- textes[nzchar(trimws(textes))]
+  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+  if (length(textes) > max_segments) textes <- textes[seq_len(max_segments)]
+
+  tok <- quanteda::tokens(textes, remove_punct = TRUE, remove_numbers = TRUE)
+  tok <- quanteda::tokens_tolower(tok)
+  all_tokens <- unlist(as.list(tok), use.names = FALSE)
+  all_tokens <- trimws(all_tokens)
+  all_tokens <- all_tokens[nzchar(all_tokens)]
+
+  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+
+  scores <- c(
+    fr = mean(all_tokens %in% obtenir_stopwords_spacy("fr", rv = rv)),
+    en = mean(all_tokens %in% obtenir_stopwords_spacy("en", rv = rv)),
+    es = mean(all_tokens %in% obtenir_stopwords_spacy("es", rv = rv))
+  )
+
+  langue <- names(scores)[which.max(scores)]
+  list(code = langue, scores = scores)
+}
+
+verifier_coherence_dictionnaire_langue <- function(textes, langue_selectionnee, rv = NULL) {
+  est <- estimer_langue_corpus(textes, rv = rv)
+  if (is.na(est$code)) return(invisible(est))
+
+  sel <- configurer_langue_spacy(langue_selectionnee)$code
+  sc_sel <- as.numeric(est$scores[[sel]])
+  sc_best <- as.numeric(max(est$scores))
+  marge <- sc_best - sc_sel
+
+  if (!identical(sel, est$code) && sc_best >= 0.02 && marge >= 0.01) {
+    cfg_sel <- configurer_langue_spacy(sel)
+    cfg_best <- configurer_langue_spacy(est$code)
+    stop(
+      paste0(
+        "Langue incohérente : le corpus ressemble à du ", cfg_best$libelle,
+        " mais le dictionnaire spaCy sélectionné est ", cfg_sel$libelle,
+        ". Choisis le dictionnaire ", cfg_best$libelle, " avant de lancer l'analyse."
+      )
+    )
+  }
+
+  invisible(est)
+}
+
 configurer_langue_spacy <- function(langue) {
   if (is.null(langue) || !nzchar(as.character(langue))) langue <- "fr"
   langue <- trimws(tolower(as.character(langue)))
@@ -622,6 +674,39 @@ server <- function(input, output, session) {
     )
   })
 
+  output$ui_spacy_langue_detection <- renderUI({
+    if (is.null(rv$filtered_corpus)) {
+      return(tags$p("Détection langue : charge et lance une analyse pour afficher une estimation."))
+    }
+
+    est <- estimer_langue_corpus(as.character(rv$filtered_corpus))
+    if (is.na(est$code)) {
+      return(tags$p("Détection langue : estimation indisponible."))
+    }
+
+    cfg_est <- configurer_langue_spacy(est$code)
+    cfg_sel <- configurer_langue_spacy(input$spacy_langue)
+
+    msg <- paste0(
+      "Langue estimée du corpus : ", cfg_est$libelle,
+      " (scores stopwords FR=", sprintf("%.3f", est$scores[["fr"]]),
+      ", EN=", sprintf("%.3f", est$scores[["en"]]),
+      ", ES=", sprintf("%.3f", est$scores[["es"]]), ")."
+    )
+
+    if (!identical(cfg_est$code, cfg_sel$code)) {
+      return(tags$div(
+        style = "border:1px solid #f5c2c7;background:#f8d7da;color:#842029;padding:10px;border-radius:4px;",
+        tags$p(style = "margin:0;", paste0(msg, " Dictionnaire sélectionné : ", cfg_sel$libelle, "."))
+      ))
+    }
+
+    tags$div(
+      style = "border:1px solid #badbcc;background:#d1e7dd;color:#0f5132;padding:10px;border-radius:4px;",
+      tags$p(style = "margin:0;", paste0(msg, " Dictionnaire sélectionné : ", cfg_sel$libelle, "."))
+    )
+  })
+
   output$ui_ner_statut <- renderUI({
     if (!isTRUE(input$activer_ner)) {
       return(tags$p("NER désactivé. Coche 'Activer NER (spaCy)' puis relance l'analyse."))
@@ -818,6 +903,8 @@ server <- function(input, output, session) {
           supprimer_apostrophes = isTRUE(input$supprimer_apostrophes)
         )
         names(textes_chd) <- ids_corpus
+
+        verifier_coherence_dictionnaire_langue(textes_chd, input$spacy_langue, rv = rv)
 
         avancer(0.22, "Prétraitement + DFM")
         rv$statut <- "Prétraitement et DFM..."
