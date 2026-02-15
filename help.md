@@ -60,6 +60,10 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 - **CHD (rainette_plot)** : affichage graphique de la CHD dans l’application.
 - **Type** : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe.
 - **Statistiques** : chi2, lr, frequency, selon le critère utilisé pour classer les termes.
+- Dans les exports CSV de type *keyness* (`measure = "chi2"`), les colonnes suivantes sont importantes :
+  - **`n_target`** : nombre d’occurrences du terme dans le sous-corpus cible (la classe/cluster analysé).
+  - **`n_reference`** : nombre d’occurrences du même terme dans le corpus de référence (le reste des classes).
+  - **`chi2`** et **`p`** : test d’association entre cible et référence ; plus `chi2` est élevé et `p` petite, plus le terme est spécifiquement lié au sous-corpus cible.
 - **Nombre de termes** : nombre de termes affichés par classe dans la visualisation.
 - **Afficher les valeurs négatives** : inclut les termes négativement associés à une classe.
 
