@@ -584,17 +584,25 @@ generer_chd_explor_si_absente <- function(rv) {
         }
         if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) k_plot <- 2L
 
-        rainette_plot(
+        plot_args <- list(
           chd_obj,
           dfm_obj,
           k = k_plot,
           measure = "chi2",
           type = "bar",
           n_terms = 20,
-          same_scales = TRUE,
           show_negative = FALSE,
           text_size = 12
         )
+
+        plot_formals <- names(formals(rainette_plot))
+        if ("free_scales" %in% plot_formals) {
+          plot_args$free_scales <- FALSE
+        } else if ("same_scales" %in% plot_formals) {
+          plot_args$same_scales <- TRUE
+        }
+
+        do.call(rainette_plot, plot_args)
       } else {
         rainette_plot(chd_obj)
       }
