@@ -185,25 +185,11 @@ generer_concordancier_html <- function(
       next
     }
 
-    txt_idx <- textes_indexation[ids_cl]
-    if (is.null(txt_idx)) txt_idx <- rep("", length(ids_cl))
-
-    keep <- detecter_segments_contenant_termes_unicode(txt_idx, termes_cl)
-    segments_keep <- segments[keep]
-    ids_keep <- names(segments_keep)
-
-    writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
-
-    if (length(segments_keep) == 0 || length(termes_cl) == 0) {
-      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
-      next
-    }
-
     tokens_surface <- character(0)
-    if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_keep) > 0) {
+    if (!is.null(spacy_tokens_df) && nrow(spacy_tokens_df) > 0 && length(ids_cl) > 0) {
       df_tok <- spacy_tokens_df
       df_tok$doc_id <- as.character(df_tok$doc_id)
-      df_tok <- df_tok[df_tok$doc_id %in% ids_keep, , drop = FALSE]
+      df_tok <- df_tok[df_tok$doc_id %in% ids_cl, , drop = FALSE]
       if (nrow(df_tok) > 0) {
         tokens_surface <- unique(df_tok$token[df_tok$lemma %in% termes_cl | df_tok$token %in% termes_cl])
         tokens_surface <- tokens_surface[!is.na(tokens_surface) & nzchar(tokens_surface)]
@@ -212,6 +198,16 @@ generer_concordancier_html <- function(
 
     termes_a_surligner <- unique(c(tokens_surface, termes_cl))
     termes_a_surligner <- termes_a_surligner[!is.na(termes_a_surligner) & nzchar(termes_a_surligner)]
+
+    keep <- detecter_segments_contenant_termes_unicode(unname(segments), termes_a_surligner)
+    segments_keep <- segments[keep]
+
+    writeLines(paste0("<p><em>Segments conservés : ", length(segments_keep), " / ", length(segments), "</em></p>"), con)
+
+    if (length(segments_keep) == 0 || length(termes_a_surligner) == 0) {
+      writeLines("<p><em>Aucun segment ne contient de terme significatif pour cette classe avec les paramètres courants.</em></p>", con)
+      next
+    }
 
     motifs <- preparer_motifs_surlignage_nfd(termes_a_surligner, taille_lot = 160)
 
