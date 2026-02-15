@@ -1,8 +1,19 @@
 ### Stéphane Meurisse - version beta 0.2 - 12-02-2026
 - <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
 
+### Méthode Reinert - CHD
+
+La méthode de Reinert est une approche statistique d’analyse lexicale conçue pour dégager des « mondes lexicaux » dans un corpus. 
+L’idée est de repérer des ensembles de segments de texte qui partagent des vocabulaires proches. 
+
+La CHD, pour « classification hiérarchique descendante », est l’algorithme de partitionnement associé à cette méthode. 
+Il procède par divisions successives : on prend l’ensemble des segments, puis on le coupe en deux groupes maximisant leur différenciation lexicale. 
+Ensuite, chaque groupe peut être à nouveau subdivisé, et ainsi de suite, jusqu’à obtenir un nombre de classes jugé pertinent ou une limite imposée par les paramètres.
+
+
 ### Rainette développé par Julien Barnier
 
+Rainette est un package R qui réalise une CHD selon la méthode Reinert.
 - <a href="https://github.com/juba/rainette/blob/main/vignettes/introduction_usage.Rmd" target="_blank" rel="noopener noreferrer">Doc Rainette</a>
 - <a href="https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html" target="_blank" rel="noopener noreferrer">Utilisation de rainette</a>
 - <a href="https://juba.r-universe.dev/builds" target="_blank" rel="noopener noreferrer">Builds r-universe</a>
