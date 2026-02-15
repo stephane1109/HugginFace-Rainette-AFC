@@ -122,6 +122,14 @@ ui <- fluidPage(
 
       tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
 
+      selectInput(
+        "spacy_langue",
+        "Dictionnaire spaCy",
+        choices = c("Français" = "fr", "Anglais" = "en", "Espagnol" = "es"),
+        selected = "fr"
+      ),
+      tags$small("Le choix de langue pilote le modèle spaCy (prétraitement, stopwords et NER)."),
+
       checkboxInput("activer_ner", "Activer NER (spaCy)", value = FALSE),
 
       tags$hr(),
