@@ -551,19 +551,115 @@ generer_chd_explor_si_absente <- function(rv) {
   if (is.null(chd_obj)) chd_obj <- rv$res
   if (is.null(chd_obj)) return(FALSE)
 
-  ok <- FALSE
-  try({
-    png(chd_png, width = 2000, height = 1500, res = 180)
-    rainette_plot(chd_obj)
-    dev.off()
-    ok <- file.exists(chd_png)
-  }, silent = TRUE)
+  dfm_obj <- rv$dfm_chd
+  err_msg <- NULL
+
+  ecrire_png_secours <- function(message = NULL) {
+    grDevices::png(chd_png, width = 2000, height = 1500, res = 180)
+    tryCatch({
+      plot.new()
+      title("CHD (export)")
+      txt <- "CHD indisponible pour cet export."
+      if (!is.null(message) && nzchar(message)) {
+        txt <- paste0(txt, "\n", message)
+      }
+      text(0.5, 0.5, txt, cex = 1.1)
+    }, finally = {
+      try(grDevices::dev.off(), silent = TRUE)
+    })
+    file.exists(chd_png) && is.finite(file.info(chd_png)$size) && file.info(chd_png)$size > 0
+  }
+
+  dessiner_chd <- function(avec_dfm = FALSE) {
+    grDevices::png(chd_png, width = 2000, height = 1500, res = 180)
+    ok_plot <- FALSE
+
+    tryCatch({
+      if (isTRUE(avec_dfm) && !is.null(dfm_obj)) {
+        k_plot <- suppressWarnings(as.integer(rv$max_n_groups_chd))
+        if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) {
+          if (!is.null(chd_obj$group)) {
+            k_plot <- suppressWarnings(max(as.integer(chd_obj$group), na.rm = TRUE))
+          }
+        }
+        if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) k_plot <- 2L
+
+        rainette_plot(
+          chd_obj,
+          dfm_obj,
+          k = k_plot,
+          measure = "chi2",
+          type = "bar",
+          n_terms = 20,
+          same_scales = TRUE,
+          show_negative = FALSE,
+          text_size = 12
+        )
+      } else {
+        rainette_plot(chd_obj)
+      }
+      ok_plot <- TRUE
+    }, error = function(e) {
+      err_msg <<- conditionMessage(e)
+    }, finally = {
+      try(grDevices::dev.off(), silent = TRUE)
+    })
+
+    isTRUE(ok_plot) && file.exists(chd_png) && is.finite(file.info(chd_png)$size) && file.info(chd_png)$size > 0
+  }
+
+  ok <- dessiner_chd(avec_dfm = FALSE)
+  if (!ok && !is.null(dfm_obj)) {
+    ok <- dessiner_chd(avec_dfm = TRUE)
+  }
 
   if (!ok) {
-    try(grDevices::dev.off(), silent = TRUE)
+    if (!is.null(rv)) {
+      msg <- if (!is.null(err_msg) && nzchar(err_msg)) err_msg else "raison inconnue"
+      ajouter_log(rv, paste0("CHD PNG non généré (", msg, ")."))
+    }
+    if (file.exists(chd_png)) unlink(chd_png)
+
+    ok_fallback <- ecrire_png_secours(err_msg)
+    if (ok_fallback) {
+      if (!is.null(rv)) ajouter_log(rv, paste0("CHD PNG de secours généré : ", chd_png))
+      ok <- TRUE
+    }
+  } else if (!is.null(rv)) {
+    ajouter_log(rv, paste0("CHD PNG généré : ", chd_png))
   }
 
   ok
+}
+
+generer_chd_html_explor <- function(rv, chd_png_rel = NULL) {
+  if (is.null(rv$export_dir) || !nzchar(rv$export_dir)) return(NULL)
+
+  explor_dir <- file.path(rv$export_dir, "explor")
+  dir.create(explor_dir, showWarnings = FALSE, recursive = TRUE)
+
+  chd_html <- file.path(explor_dir, "chd.html")
+  img_part <- "<p><em>CHD non disponible dans l'export.</em></p>"
+  if (!is.null(chd_png_rel) && nzchar(chd_png_rel)) {
+    img_src <- basename(chd_png_rel)
+    img_part <- paste0("<p><img src='", img_src, "' style='max-width:100%;height:auto;border:1px solid #ddd;'/></p>")
+  }
+
+  con <- file(chd_html, open = "wt", encoding = "UTF-8")
+  on.exit(try(close(con), silent = TRUE), add = TRUE)
+
+  writeLines("<html><head><meta charset='utf-8'/><title>CHD Rainette</title>", con)
+  writeLines("<style>body{font-family:Arial,sans-serif;margin:20px;} h1{margin-top:0;}</style>", con)
+  writeLines("</head><body>", con)
+  writeLines("<h1>CHD (Rainette)</h1>", con)
+  writeLines(img_part, con)
+  writeLines("</body></html>", con)
+
+  if (!file.exists(chd_html)) return(NULL)
+  if (!is.finite(file.info(chd_html)$size) || file.info(chd_html)$size <= 0) return(NULL)
+
+  if (!is.null(rv)) ajouter_log(rv, paste0("CHD HTML généré : ", chd_html))
+  file.path("explor", "chd.html")
 }
 
 server <- function(input, output, session) {
@@ -1376,6 +1472,49 @@ server <- function(input, output, session) {
           }, silent = TRUE)
         }
 
+        explor_assets <- NULL
+        ok_chd_png <- generer_chd_explor_si_absente(rv)
+
+        chd_png_rel <- NULL
+        if (isTRUE(ok_chd_png) && file.exists(file.path(rv$export_dir, "explor", "chd.png"))) {
+          chd_png_rel <- file.path("explor", "chd.png")
+        }
+        chd_html_rel <- generer_chd_html_explor(rv, chd_png_rel)
+
+        wc_files <- list.files(wordcloud_dir, pattern = "\\.png$", full.names = FALSE)
+        if (length(wc_files) > 0) {
+          wc_classes <- gsub("^cluster_([0-9]+)_wordcloud\\.png$", "\\1", wc_files)
+          wordclouds_df <- data.frame(
+            classe = wc_classes,
+            src = file.path("wordclouds", wc_files),
+            stringsAsFactors = FALSE
+          )
+          wordclouds_df <- wordclouds_df[order(suppressWarnings(as.integer(wordclouds_df$classe))), , drop = FALSE]
+        } else {
+          wordclouds_df <- data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
+        }
+
+        cooc_files <- list.files(cooc_dir, pattern = "\\.png$", full.names = FALSE)
+        if (length(cooc_files) > 0) {
+          cooc_classes <- gsub("^cluster_([0-9]+)_fcm_network\\.png$", "\\1", cooc_files)
+          coocs_df <- data.frame(
+            classe = cooc_classes,
+            src = file.path("cooccurrences", cooc_files),
+            stringsAsFactors = FALSE
+          )
+          coocs_df <- coocs_df[order(suppressWarnings(as.integer(coocs_df$classe))), , drop = FALSE]
+        } else {
+          coocs_df <- data.frame(classe = character(0), src = character(0), stringsAsFactors = FALSE)
+        }
+
+        explor_assets <- list(
+          chd = chd_png_rel,
+          chd_html = chd_html_rel,
+          wordclouds = wordclouds_df,
+          coocs = coocs_df
+        )
+        rv$explor_assets <- explor_assets
+
         args_concordancier <- list(
           chemin_sortie = html_file,
           segments_by_class = segments_by_class,
@@ -1383,6 +1522,7 @@ server <- function(input, output, session) {
           max_p = input$max_p,
           textes_indexation = textes_index_ok,
           spacy_tokens_df = rv$spacy_tokens_df,
+          explor_assets = explor_assets,
           avancer = avancer,
           rv = rv
         )
@@ -1786,6 +1926,7 @@ server <- function(input, output, session) {
       file.copy(zip_tmp, file, overwrite = TRUE)
     }
   )
+
 }
 
 shinyApp(ui = ui, server = server)
