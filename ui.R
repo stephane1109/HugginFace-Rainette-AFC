@@ -131,7 +131,7 @@ ui <- fluidPage(
       tags$small("Les caractères présents dans la liste entre crochets sont conservés ; tous les autres (ex. @ # & / emoji) sont remplacés par des espaces."),
       tags$small("L'option “Supprimer la ponctuation” pilote remove_punct, même si elle est autorisée par la regex ci-dessus."),
 
-      tags$div(class = "sidebar-section-title", "Paramétrages SpaCy"),
+      tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
       selectInput(
         "spacy_langue",
