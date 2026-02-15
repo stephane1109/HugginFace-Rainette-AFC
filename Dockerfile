@@ -36,12 +36,12 @@ RUN set -eux; \
     fi
 
 ENV HOME=/home/user
+ENV AUTO_UPDATE_RAINETTE=true
 WORKDIR /home/user/app
 
 COPY . /home/user/app
 
-RUN printf "port <- as.integer(Sys.getenv('PORT', '7860'))\nshiny::runApp('/home/user/app', host='0.0.0.0', port=port)\n" > /home/user/app/start.R && \
-    chown -R user:user /home/user/app
+RUN chown -R user:user /home/user/app
 
 USER user
 EXPOSE 7860
