@@ -193,12 +193,12 @@ assurer_docvars_dfm_minimal <- function(dfm_obj, corpus_aligne) {
   dfm_obj
 }
 
-construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retirer_stopwords, rv, libelle) {
+construire_dfm_avec_fallback_stopwords <- function(tok_base, min_docfreq, retirer_stopwords, langue_spacy, rv, libelle) {
   n_base <- compter_tokens(tok_base)
   ajouter_log(rv, paste0(libelle, " : tokens (avant stopwords) = ", n_base))
 
   if (isTRUE(retirer_stopwords)) {
-    tok_sw <- tokens_remove(tok_base, obtenir_stopwords_fr(rv))
+    tok_sw <- tokens_remove(tok_base, obtenir_stopwords_spacy(langue_spacy = langue_spacy, rv = rv))
     tok_sw <- tokens_tolower(tok_sw)
     n_sw <- compter_tokens(tok_sw)
     ajouter_log(rv, paste0(libelle, " : tokens (après stopwords) = ", n_sw))
@@ -301,7 +301,74 @@ verifier_dfm_avant_rainette <- function(dfm_obj, input) {
 
 
 
-executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, rv) {
+
+
+
+estimer_langue_corpus <- function(textes, rv = NULL, max_segments = 200) {
+  if (is.null(textes) || length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+
+  textes <- as.character(textes)
+  textes <- textes[nzchar(trimws(textes))]
+  if (length(textes) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+  if (length(textes) > max_segments) textes <- textes[seq_len(max_segments)]
+
+  tok <- quanteda::tokens(textes, remove_punct = TRUE, remove_numbers = TRUE)
+  tok <- quanteda::tokens_tolower(tok)
+  all_tokens <- unlist(as.list(tok), use.names = FALSE)
+  all_tokens <- trimws(all_tokens)
+  all_tokens <- all_tokens[nzchar(all_tokens)]
+
+  if (length(all_tokens) == 0) return(list(code = NA_character_, scores = c(fr = 0, en = 0, es = 0)))
+
+  scores <- c(
+    fr = mean(all_tokens %in% obtenir_stopwords_spacy("fr", rv = rv)),
+    en = mean(all_tokens %in% obtenir_stopwords_spacy("en", rv = rv)),
+    es = mean(all_tokens %in% obtenir_stopwords_spacy("es", rv = rv))
+  )
+
+  langue <- names(scores)[which.max(scores)]
+  list(code = langue, scores = scores)
+}
+
+verifier_coherence_dictionnaire_langue <- function(textes, langue_selectionnee, rv = NULL) {
+  est <- estimer_langue_corpus(textes, rv = rv)
+  if (is.na(est$code)) return(invisible(est))
+
+  sel <- configurer_langue_spacy(langue_selectionnee)$code
+  sc_sel <- as.numeric(est$scores[[sel]])
+  sc_best <- as.numeric(max(est$scores))
+  marge <- sc_best - sc_sel
+
+  if (!identical(sel, est$code) && sc_best >= 0.02 && marge >= 0.01) {
+    cfg_sel <- configurer_langue_spacy(sel)
+    cfg_best <- configurer_langue_spacy(est$code)
+    stop(
+      paste0(
+        "Langue incohérente : le corpus ressemble à du ", cfg_best$libelle,
+        " mais le dictionnaire spaCy sélectionné est ", cfg_sel$libelle,
+        ". Choisis le dictionnaire ", cfg_best$libelle, " avant de lancer l'analyse."
+      )
+    )
+  }
+
+  invisible(est)
+}
+
+configurer_langue_spacy <- function(langue) {
+  if (is.null(langue) || !nzchar(as.character(langue))) langue <- "fr"
+  langue <- trimws(tolower(as.character(langue)))
+  if (!langue %in% c("fr", "en", "es")) langue <- "fr"
+
+  switch(
+    langue,
+    fr = list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr"),
+    en = list(code = "en", libelle = "Anglais", modele = "en_core_web_md", stopwords_module = "en"),
+    es = list(code = "es", libelle = "Espagnol", modele = "es_core_news_md", stopwords_module = "es"),
+    list(code = "fr", libelle = "Français", modele = "fr_core_news_md", stopwords_module = "fr")
+  )
+}
+
+executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemmes, lower_input, modele_spacy, rv) {
   script_spacy <- tryCatch(normalizePath("spacy_preprocess.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_spacy) || !file.exists(script_spacy)) stop("Script spaCy introuvable : spacy_preprocess.py (à la racine du projet).")
 
@@ -324,7 +391,7 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
     script_spacy,
     "--input", in_tsv,
     "--output", out_tsv,
-    "--modele", "fr_core_news_md",
+    "--modele", modele_spacy,
     "--pos_keep", paste(pos_a_conserver, collapse = ","),
     "--lemmes", ifelse(isTRUE(utiliser_lemmes), "1", "0"),
     "--lower_input", ifelse(isTRUE(lower_input), "1", "0"),
@@ -352,18 +419,23 @@ executer_spacy_filtrage <- function(ids, textes, pos_a_conserver, utiliser_lemme
   list(textes = res[ids], tokens_df = df_tok)
 }
 
-obtenir_stopwords_fr <- local({
-  cache <- NULL
+obtenir_stopwords_spacy <- local({
+  cache <- new.env(parent = emptyenv())
 
-  function(rv = NULL) {
-    if (!is.null(cache)) return(cache)
+  function(langue_spacy = "fr", rv = NULL) {
+    cfg <- configurer_langue_spacy(langue_spacy)
+    code <- cfg$code
+
+    if (exists(code, envir = cache, inherits = FALSE)) {
+      return(get(code, envir = cache, inherits = FALSE))
+    }
 
     python_cmd <- Sys.which("python3")
     if (!nzchar(python_cmd)) python_cmd <- Sys.which("python")
 
     if (nzchar(python_cmd)) {
       py_code <- paste(
-        "from spacy.lang.fr.stop_words import STOP_WORDS",
+        paste0("from spacy.lang.", cfg$stopwords_module, ".stop_words import STOP_WORDS"),
         "for w in sorted(STOP_WORDS):",
         "    print(w)",
         sep = "\n"
@@ -380,20 +452,25 @@ obtenir_stopwords_fr <- local({
         stopwords_spacy <- stopwords_spacy[!grepl("^Traceback", stopwords_spacy)]
 
         if (length(stopwords_spacy) > 0) {
-          cache <<- unique(stopwords_spacy)
-          if (!is.null(rv)) ajouter_log(rv, paste0("Stopwords chargés depuis spaCy (", length(cache), " termes)."))
-          return(cache)
+          sw <- unique(stopwords_spacy)
+          assign(code, sw, envir = cache)
+          if (!is.null(rv)) {
+            ajouter_log(rv, paste0("Stopwords spaCy chargés (", cfg$libelle, ") : ", length(sw), " termes."))
+          }
+          return(sw)
         }
       }
     }
 
-    cache <<- character(0)
-    if (!is.null(rv)) ajouter_log(rv, "Impossible de charger les stopwords spaCy : aucun stopword ne sera retiré.")
-    cache
+    assign(code, character(0), envir = cache)
+    if (!is.null(rv)) {
+      ajouter_log(rv, paste0("Impossible de charger les stopwords spaCy pour ", cfg$libelle, "."))
+    }
+    get(code, envir = cache, inherits = FALSE)
   }
 })
 
-executer_spacy_ner <- function(ids, textes, rv) {
+executer_spacy_ner <- function(ids, textes, modele_spacy, rv) {
   script_ner <- tryCatch(normalizePath("ner.py", mustWork = TRUE), error = function(e) NA_character_)
   if (is.na(script_ner) || !file.exists(script_ner)) stop("Script NER introuvable : ner.py (à la racine du projet).")
 
@@ -413,7 +490,7 @@ executer_spacy_ner <- function(ids, textes, rv) {
     script_ner,
     "--input", in_tsv,
     "--output", out_tsv,
-    "--modele", "fr_core_news_md"
+    "--modele", modele_spacy
   )
 
   ajouter_log(rv, paste0("NER : exécution (", python_cmd, " ", paste(args, collapse = " "), ")"))
@@ -594,6 +671,39 @@ server <- function(input, output, session) {
           msg
         )
       })
+    )
+  })
+
+  output$ui_spacy_langue_detection <- renderUI({
+    if (is.null(rv$filtered_corpus)) {
+      return(tags$p("Détection langue : charge et lance une analyse pour afficher une estimation."))
+    }
+
+    est <- estimer_langue_corpus(as.character(rv$filtered_corpus))
+    if (is.na(est$code)) {
+      return(tags$p("Détection langue : estimation indisponible."))
+    }
+
+    cfg_est <- configurer_langue_spacy(est$code)
+    cfg_sel <- configurer_langue_spacy(input$spacy_langue)
+
+    msg <- paste0(
+      "Langue estimée du corpus : ", cfg_est$libelle,
+      " (scores stopwords FR=", sprintf("%.3f", est$scores[["fr"]]),
+      ", EN=", sprintf("%.3f", est$scores[["en"]]),
+      ", ES=", sprintf("%.3f", est$scores[["es"]]), ")."
+    )
+
+    if (!identical(cfg_est$code, cfg_sel$code)) {
+      return(tags$div(
+        style = "border:1px solid #f5c2c7;background:#f8d7da;color:#842029;padding:10px;border-radius:4px;",
+        tags$p(style = "margin:0;", paste0(msg, " Dictionnaire sélectionné : ", cfg_sel$libelle, "."))
+      ))
+    }
+
+    tags$div(
+      style = "border:1px solid #badbcc;background:#d1e7dd;color:#0f5132;padding:10px;border-radius:4px;",
+      tags$p(style = "margin:0;", paste0(msg, " Dictionnaire sélectionné : ", cfg_sel$libelle, "."))
     )
   })
 
@@ -794,11 +904,14 @@ server <- function(input, output, session) {
         )
         names(textes_chd) <- ids_corpus
 
+        verifier_coherence_dictionnaire_langue(textes_chd, input$spacy_langue, rv = rv)
+
         avancer(0.22, "Prétraitement + DFM")
         rv$statut <- "Prétraitement et DFM..."
 
         filtrage_morpho <- isTRUE(input$filtrage_morpho)
         utiliser_lemmes <- isTRUE(input$spacy_utiliser_lemmes)
+        config_spacy <- configurer_langue_spacy(input$spacy_langue)
         utiliser_pipeline_spacy <- filtrage_morpho || utiliser_lemmes
 
         if (!utiliser_pipeline_spacy) {
@@ -815,6 +928,7 @@ server <- function(input, output, session) {
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
             retirer_stopwords = isTRUE(input$retirer_stopwords),
+            langue_spacy = input$spacy_langue,
             rv = rv,
             libelle = "Standard"
           )
@@ -832,7 +946,7 @@ server <- function(input, output, session) {
           ajouter_log(
             rv,
             paste0(
-              "spaCy (fr_core_news_md) | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
+              "spaCy (", config_spacy$modele, ", ", config_spacy$libelle, ") | filtrage POS=", ifelse(filtrage_morpho, "1", "0"),
               ifelse(filtrage_morpho, paste0(" (", paste(pos_a_conserver, collapse = ", "), ")"), ""),
               " | lemmes=", ifelse(utiliser_lemmes, "1", "0"),
               " | stopwords: spaCy"
@@ -848,6 +962,7 @@ server <- function(input, output, session) {
             pos_a_conserver = pos_a_conserver,
             utiliser_lemmes = utiliser_lemmes,
             lower_input = isTRUE(input$forcer_minuscules_avant),
+            modele_spacy = config_spacy$modele,
             rv = rv
           )
 
@@ -867,6 +982,7 @@ server <- function(input, output, session) {
             tok_base = tok_base,
             min_docfreq = input$min_docfreq,
             retirer_stopwords = isTRUE(input$retirer_stopwords),
+            langue_spacy = input$spacy_langue,
             rv = rv,
             libelle = "spaCy"
           )
@@ -967,14 +1083,17 @@ server <- function(input, output, session) {
         rv$statut <- "NER (si activé)..."
 
         if (isTRUE(input$activer_ner)) {
+          config_spacy_ner <- configurer_langue_spacy(input$spacy_langue)
           ids_ner <- docnames(filtered_corpus_ok)
           textes_ner <- as.character(filtered_corpus_ok)
           rv$ner_nb_segments <- length(textes_ner)
+          ajouter_log(rv, paste0("NER spaCy : modèle ", config_spacy_ner$modele, " (", config_spacy_ner$libelle, ")."))
 
           df_ent <- executer_spacy_ner(
             ids_ner,
             textes_ner,
-            rv
+            modele_spacy = config_spacy_ner$modele,
+            rv = rv
           )
 
           classes_vec <- as.integer(docvars(filtered_corpus_ok)$Classes)

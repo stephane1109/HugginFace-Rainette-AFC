@@ -18,12 +18,13 @@ RUN install.r shiny rainette quanteda wordcloud RColorBrewer igraph dplyr htmlto
 # FactoMineR depuis GitHub (sans tirer les Suggests)
 RUN R -q -e "options(repos=c(CRAN='https://cloud.r-project.org')); remotes::install_github('husson/FactoMineR', dependencies=NA, upgrade='never')"
 
-# spaCy 3.7.2 + lookups + modèle FR md (wheel)
+# spaCy 3.7.2 + lookups + modèles FR/EN/ES (wheels)
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir spacy==3.7.2 spacy-lookups-data && \
     python3 -m pip install --no-cache-dir \
-      https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.7.0/fr_core_news_md-3.7.0-py3-none-any.whl
-
+      https://github.com/explosion/spacy-models/releases/download/fr_core_news_md-3.7.0/fr_core_news_md-3.7.0-py3-none-any.whl \
+      https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl \
+      https://github.com/explosion/spacy-models/releases/download/es_core_news_md-3.7.0/es_core_news_md-3.7.0-py3-none-any.whl
 # Utilisateur non-root compatible Hugging Face
 RUN set -eux; \
     if ! id -u user >/dev/null 2>&1; then \
