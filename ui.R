@@ -103,7 +103,7 @@ ui <- fluidPage(
       checkboxInput("nettoyage_caracteres", "Nettoyage caractères (regex)", value = FALSE),
       checkboxInput("supprimer_ponctuation", "Supprimer la ponctuation", value = FALSE),
       checkboxInput("supprimer_chiffres", "Supprimer les chiffres (0-9)", value = FALSE),
-      checkboxInput("supprimer_apostrophes", "Remplacer l’apostrophe par un espace", value = FALSE),
+      checkboxInput("supprimer_apostrophes", "Traiter les élisions FR (c'est→est, m'écrire→écrire)", value = FALSE),
       checkboxInput("forcer_minuscules_avant", "Forcer les minuscules avant traitement", value = FALSE),
       checkboxInput("retirer_stopwords", "Retirer les stopwords (spaCy)", value = FALSE),
       checkboxInput("filtrage_morpho", "Filtrage morphosyntaxique (spaCy)", value = FALSE),
@@ -122,6 +122,7 @@ ui <- fluidPage(
         )
       ),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
+      tags$small("Pour regrouper c'est/est sous le verbe être, active aussi la lemmatisation spaCy."),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
@@ -130,6 +131,7 @@ ui <- fluidPage(
       ),
       tags$small("Les caractères présents dans la liste entre crochets sont conservés ; tous les autres (ex. @ # & / emoji) sont remplacés par des espaces."),
       tags$small("L'option “Supprimer la ponctuation” pilote remove_punct, même si elle est autorisée par la regex ci-dessus."),
+      tags$small("Astuce : cette option conserve les apostrophes lexicales (ex. aujourd'hui) et ne traite que les élisions en début de mot."),
 
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 

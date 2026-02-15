@@ -966,7 +966,6 @@ server <- function(input, output, session) {
             remove_punct = isTRUE(input$supprimer_ponctuation),
             remove_numbers = isTRUE(input$supprimer_chiffres)
           )
-          tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
@@ -1020,7 +1019,6 @@ server <- function(input, output, session) {
             remove_punct = isTRUE(input$supprimer_ponctuation),
             remove_numbers = isTRUE(input$supprimer_chiffres)
           )
-          tok_base <- tokens_split(tok_base, "'")
 
           res_dfm <- construire_dfm_avec_fallback_stopwords(
             tok_base = tok_base,
