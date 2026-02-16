@@ -122,7 +122,6 @@ ui <- fluidPage(
         )
       ),
       checkboxInput("spacy_utiliser_lemmes", "Lemmatisation (spaCy)", value = FALSE),
-      tags$small("Pour regrouper c'est/est sous le verbe être, active aussi la lemmatisation spaCy."),
 
       tags$small("Regex appliquée quand “Nettoyage caractères (regex)” est activé :"),
       tags$pre(
@@ -131,7 +130,7 @@ ui <- fluidPage(
       ),
       tags$small("Les caractères présents dans la liste entre crochets sont conservés ; tous les autres (ex. @ # & / emoji) sont remplacés par des espaces."),
       tags$small("L'option “Supprimer la ponctuation” pilote remove_punct, même si elle est autorisée par la regex ci-dessus."),
-      tags$small("Astuce : cette option conserve les apostrophes lexicales (ex. aujourd'hui) et ne traite que les élisions en début de mot."),
+      tags$small("Cette option conserve les apostrophes lexicales (ex. aujourd'hui) et ne traite que les élisions en début de mot."),
 
       tags$div(class = "sidebar-section-title", "Paramètres SpaCy/NER"),
 
