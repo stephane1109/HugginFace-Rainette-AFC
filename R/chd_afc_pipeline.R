@@ -221,17 +221,22 @@ generer_chd_explor_si_absente <- function(rv) {
         }
         if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) k_plot <- 2L
 
-        rainette_plot(
-          chd_obj,
-          dfm_obj,
+        args_plot <- list(
+          x = chd_obj,
+          dtm = dfm_obj,
           k = k_plot,
           measure = "chi2",
           type = "bar",
           n_terms = 20,
-          same_scales = TRUE,
           show_negative = FALSE,
           text_size = 12
         )
+
+        params_plot <- tryCatch(names(formals(rainette_plot)), error = function(e) character(0))
+        if ("same_scales" %in% params_plot) args_plot$same_scales <- TRUE
+        if ("free_scales" %in% params_plot) args_plot$free_scales <- FALSE
+
+        do.call(rainette_plot, args_plot)
       } else {
         rainette_plot(chd_obj)
       }
