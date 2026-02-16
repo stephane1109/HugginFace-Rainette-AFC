@@ -1,5 +1,5 @@
 ###############################################################################
-#                    Script CHD - version beta 0.2 - 12-02-2026               #
+#                    Script CHD - version beta 0.3 - 12-02-2026               #
 #      A partir d'un corpus texte formaté aux exigences IRAMUTEQ              #
 #                            Stéphane Meurisse                                #
 #                           wwww.codeandcortex.fr                             #          
