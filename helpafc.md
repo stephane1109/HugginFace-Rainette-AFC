@@ -58,7 +58,7 @@ Le CSV stats_termes.csv exporte rv$afc_obj$termes_stats complet (dans le périm�
 - Les **résidus/chi2** sont des statistiques d’association utiles pour l’interprétation.
 - Le paramètre `top_termes` n’influence pas le calcul de l’AFC ; il limite seulement le nombre de labels affichés sur le graphe.
 
-### Comment le résidu de Pearson est calculé (en pratique)
+### Comment le résidu de Pearson est calculé
 
 Pour chaque mot et chaque classe, le script fait ceci :
 
@@ -68,11 +68,23 @@ Pour chaque mot et chaque classe, le script fait ceci :
 
 Cette valeur est calculée cellule par cellule dans la table Classes × Termes.
 
-Dans ce projet, le résidu sert surtout à l’interprétation diagnostique, pas à recalculer l’AFC :
+Dans ce projet, le résidu ne sert pas pas à recalculer l’AFC.
 
 - le code extrait, pour chaque mot, la classe où la surreprésentation relative est la plus forte (Classe_max_resid) et sa valeur (resid_max).
 - en parallèle, il garde aussi Classe_max comme classe la plus fréquente en brut (volume observé), ce qui est un autre indicateur.
 - la doc du projet dit explicitement cette différence :
    - Classe_max = volume,
    - Classe_max_resid = surreprésentation relative.
+ 
+Résidu positif / résidu négatif
+
+Pour chaque mot dans chaque classe, on compare :
+
+- ce qu’on voit réellement dans la classe,
+- ce qu’on aurait attendu si le mot était réparti “normalement”.
+
+Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
+Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
+Résidu proche de 0 => présence “normale”, pas d’écart fort.
+
 
