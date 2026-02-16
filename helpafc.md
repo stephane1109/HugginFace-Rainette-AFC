@@ -27,7 +27,12 @@ Le filtrage est fait dans la fonction de tracé des termes :
 3. on trie par `frequency` décroissante,
 4. on garde les `top_termes` premiers.
 
-Donc `top_termes` filtre par **fréquence** (pas directement par p-value).
+Pourquoi top_termes est en fréquence et pas en p-value ?
+
+Parce que top_termes est une contrainte de lisibilité graphique
+Le rôle de top_termes est de limiter le nombre de labels affichés dans tracer_afc_classes_termes(...), sinon le plot devient illisible (chevauchements, bruit). 
+Le code trie les termes par frequency puis coupe à top_termes.
+En amont, dans le pipeline serveur, on construit termes_signif avec p <= input$max_p, puis on passe ces termes à executer_afc_classes(..., termes_cibles = termes_signif, ...). Donc la p-value a déjà réduit le périmètre des termes entrants AFC.
 
 ### 4) Le CSV contient-il seulement `top_termes` ?
 
