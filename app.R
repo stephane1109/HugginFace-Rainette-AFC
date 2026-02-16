@@ -654,7 +654,12 @@ server <- function(input, output, session) {
           arrange(Classe, desc(chi2))
 
         stats_file <- file.path(rv$export_dir, "stats_par_classe.csv")
-        write.csv(res_stats_df, stats_file, row.names = FALSE)
+        res_stats_export <- formater_numeriques_csv(
+          res_stats_df,
+          digits = 8,
+          exclure = "Classe"
+        )
+        write.csv(res_stats_export, stats_file, row.names = FALSE)
 
         rv$segments_file <- segments_file
         rv$stats_file <- stats_file
@@ -778,12 +783,20 @@ server <- function(input, output, session) {
           rv$afc_plot_termes <- afc_termes_png
 
           write.csv(rv$afc_obj$table, file.path(rv$afc_dir, "table_classes_termes.csv"), row.names = TRUE)
-          write.csv(rv$afc_obj$rowcoord, file.path(rv$afc_dir, "coords_classes.csv"), row.names = TRUE)
-          write.csv(rv$afc_obj$colcoord, file.path(rv$afc_dir, "coords_termes.csv"), row.names = TRUE)
-          write.csv(rv$afc_obj$termes_stats, file.path(rv$afc_dir, "stats_termes.csv"), row.names = FALSE)
+
+          coords_classes_export <- formater_numeriques_csv(as.data.frame(rv$afc_obj$rowcoord), digits = 8)
+          coords_termes_export <- formater_numeriques_csv(as.data.frame(rv$afc_obj$colcoord), digits = 8)
+          write.csv(coords_classes_export, file.path(rv$afc_dir, "coords_classes.csv"), row.names = TRUE)
+          write.csv(coords_termes_export, file.path(rv$afc_dir, "coords_termes.csv"), row.names = TRUE)
+
+          termes_stats_export <- rv$afc_obj$termes_stats
+          if ("Significatif" %in% names(termes_stats_export)) termes_stats_export$Significatif <- NULL
+          termes_stats_export <- formater_numeriques_csv(termes_stats_export, digits = 8)
+          write.csv(termes_stats_export, file.path(rv$afc_dir, "stats_termes.csv"), row.names = FALSE)
 
           if (!is.null(rv$afc_obj$ca$eig)) {
-            write.csv(as.data.frame(rv$afc_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres.csv"), row.names = TRUE)
+            eig_export <- formater_numeriques_csv(as.data.frame(rv$afc_obj$ca$eig), digits = 8)
+            write.csv(eig_export, file.path(rv$afc_dir, "valeurs_propres.csv"), row.names = TRUE)
           }
 
           rv$afc_table_mots <- rv$afc_obj$termes_stats
@@ -806,12 +819,20 @@ server <- function(input, output, session) {
           rv$afc_plot_vars <- afc_vars_png
 
           write.csv(rv$afc_vars_obj$table, file.path(rv$afc_dir, "table_classes_variables.csv"), row.names = TRUE)
-          write.csv(rv$afc_vars_obj$rowcoord, file.path(rv$afc_dir, "coords_classes_vars.csv"), row.names = TRUE)
-          write.csv(rv$afc_vars_obj$colcoord, file.path(rv$afc_dir, "coords_modalites.csv"), row.names = TRUE)
-          write.csv(rv$afc_vars_obj$modalites_stats, file.path(rv$afc_dir, "stats_modalites.csv"), row.names = FALSE)
+
+          coords_classes_vars_export <- formater_numeriques_csv(as.data.frame(rv$afc_vars_obj$rowcoord), digits = 8)
+          coords_modalites_export <- formater_numeriques_csv(as.data.frame(rv$afc_vars_obj$colcoord), digits = 8)
+          write.csv(coords_classes_vars_export, file.path(rv$afc_dir, "coords_classes_vars.csv"), row.names = TRUE)
+          write.csv(coords_modalites_export, file.path(rv$afc_dir, "coords_modalites.csv"), row.names = TRUE)
+
+          modalites_stats_export <- rv$afc_vars_obj$modalites_stats
+          if ("Significatif" %in% names(modalites_stats_export)) modalites_stats_export$Significatif <- NULL
+          modalites_stats_export <- formater_numeriques_csv(modalites_stats_export, digits = 8)
+          write.csv(modalites_stats_export, file.path(rv$afc_dir, "stats_modalites.csv"), row.names = FALSE)
 
           if (!is.null(rv$afc_vars_obj$ca$eig)) {
-            write.csv(as.data.frame(rv$afc_vars_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres_vars.csv"), row.names = TRUE)
+            eig_vars_export <- formater_numeriques_csv(as.data.frame(rv$afc_vars_obj$ca$eig), digits = 8)
+            write.csv(eig_vars_export, file.path(rv$afc_dir, "valeurs_propres_vars.csv"), row.names = TRUE)
           }
 
           rv$afc_table_vars <- rv$afc_vars_obj$modalites_stats
