@@ -54,7 +54,7 @@ ui <- fluidPage(
     tags$br(),
     "Pour d'autres infos vous pouvez consulter mon site : www.codeandcortex.fr",
     tags$br(),
-    "version beta 0.2 - 12-02-2026"
+    "version beta 0.3 - 12-02-2026"
   ),
 
   sidebarLayout(
