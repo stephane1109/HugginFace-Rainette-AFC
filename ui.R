@@ -48,11 +48,11 @@ ui <- fluidPage(
   ),
   tags$p(
     style = "font-size: 14px;",
-    "Le script est basé sur le package Rainette de Julien Barnier, l'exercice ici est de rendre fonctionnel sur un serveur distant l'analyse CHD et AFC.",
+    "Le script est basé sur le package Rainette de Julien Barnier. L’exercice ici consiste à rendre fonctionnelles, sur un serveur distant, l’analyse CHD et l’AFC",
     tags$br(),
     "En test j'ai également expérimenté la recherche de NER dans le corpus s'appuyant sur la librairie Spacy (modele \"md\").",
     tags$br(),
-    "Pour d'autres infos vous pouvez consulter mon site : www.codeandcortex.fr",
+    "Pour plus d’informations, vous pouvez consulter mon site : www.codeandcortex.fr",
     tags$br(),
     "version beta 0.3 - 12-02-2026"
   ),
