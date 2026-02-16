@@ -3,6 +3,26 @@
 # (préparation, CHD/AFC/NER, exports) pour alléger `app.R` à comportement constant.
 
 register_events_lancer <- function(input, output, session, rv) {
+    formater_df_csv_6_decimales <- function(df) {
+      if (is.null(df)) return(df)
+      df_out <- df
+      for (nm in names(df_out)) {
+        col <- df_out[[nm]]
+        if (is.numeric(col)) {
+          df_out[[nm]] <- ifelse(
+            is.na(col),
+            NA_character_,
+            formatC(col, format = "f", digits = 6)
+          )
+        }
+      }
+      df_out
+    }
+
+    ecrire_csv_6_decimales <- function(df, chemin, row.names = FALSE) {
+      write.csv(formater_df_csv_6_decimales(df), chemin, row.names = row.names)
+    }
+
     observeEvent(input$lancer, {
       rv$logs <- ""
       rv$statut <- "Vérification du fichier..."
@@ -327,7 +347,7 @@ register_events_lancer <- function(input, output, session, rv) {
             arrange(Classe, desc(chi2))
 
           stats_file <- file.path(rv$export_dir, "stats_par_classe.csv")
-          write.csv(res_stats_df, stats_file, row.names = FALSE)
+          ecrire_csv_6_decimales(res_stats_df, stats_file, row.names = FALSE)
 
           rv$segments_file <- segments_file
           rv$stats_file <- stats_file
@@ -450,13 +470,13 @@ register_events_lancer <- function(input, output, session, rv) {
             rv$afc_plot_classes <- afc_classes_png
             rv$afc_plot_termes <- afc_termes_png
 
-            write.csv(rv$afc_obj$table, file.path(rv$afc_dir, "table_classes_termes.csv"), row.names = TRUE)
-            write.csv(rv$afc_obj$rowcoord, file.path(rv$afc_dir, "coords_classes.csv"), row.names = TRUE)
-            write.csv(rv$afc_obj$colcoord, file.path(rv$afc_dir, "coords_termes.csv"), row.names = TRUE)
-            write.csv(rv$afc_obj$termes_stats, file.path(rv$afc_dir, "stats_termes.csv"), row.names = FALSE)
+            ecrire_csv_6_decimales(rv$afc_obj$table, file.path(rv$afc_dir, "table_classes_termes.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_obj$rowcoord, file.path(rv$afc_dir, "coords_classes.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_obj$colcoord, file.path(rv$afc_dir, "coords_termes.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_obj$termes_stats, file.path(rv$afc_dir, "stats_termes.csv"), row.names = FALSE)
 
             if (!is.null(rv$afc_obj$ca$eig)) {
-              write.csv(as.data.frame(rv$afc_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres.csv"), row.names = TRUE)
+              ecrire_csv_6_decimales(as.data.frame(rv$afc_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres.csv"), row.names = TRUE)
             }
 
             rv$afc_table_mots <- rv$afc_obj$termes_stats
@@ -478,13 +498,13 @@ register_events_lancer <- function(input, output, session, rv) {
 
             rv$afc_plot_vars <- afc_vars_png
 
-            write.csv(rv$afc_vars_obj$table, file.path(rv$afc_dir, "table_classes_variables.csv"), row.names = TRUE)
-            write.csv(rv$afc_vars_obj$rowcoord, file.path(rv$afc_dir, "coords_classes_vars.csv"), row.names = TRUE)
-            write.csv(rv$afc_vars_obj$colcoord, file.path(rv$afc_dir, "coords_modalites.csv"), row.names = TRUE)
-            write.csv(rv$afc_vars_obj$modalites_stats, file.path(rv$afc_dir, "stats_modalites.csv"), row.names = FALSE)
+            ecrire_csv_6_decimales(rv$afc_vars_obj$table, file.path(rv$afc_dir, "table_classes_variables.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_vars_obj$rowcoord, file.path(rv$afc_dir, "coords_classes_vars.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_vars_obj$colcoord, file.path(rv$afc_dir, "coords_modalites.csv"), row.names = TRUE)
+            ecrire_csv_6_decimales(rv$afc_vars_obj$modalites_stats, file.path(rv$afc_dir, "stats_modalites.csv"), row.names = FALSE)
 
             if (!is.null(rv$afc_vars_obj$ca$eig)) {
-              write.csv(as.data.frame(rv$afc_vars_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres_vars.csv"), row.names = TRUE)
+              ecrire_csv_6_decimales(as.data.frame(rv$afc_vars_obj$ca$eig), file.path(rv$afc_dir, "valeurs_propres_vars.csv"), row.names = TRUE)
             }
 
             rv$afc_table_vars <- rv$afc_vars_obj$modalites_stats
