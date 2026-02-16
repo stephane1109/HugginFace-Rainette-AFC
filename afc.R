@@ -4,7 +4,7 @@
 # Le fichier fournit les fonctions attendues par app.R, sans changer la logique globale :
 # - calcul des tables de contingence
 # - exécution de l'AFC
-# - statistiques (fréquence, chi2, p-value, significatif oui/non)
+# - statistiques (fréquence, chi2, p-value)
 # - tracés avec axes centrés (0 au centre) et limites symétriques
 # - option anti-chevauchement des labels (placement en spirale + tests de collision)
 
@@ -170,7 +170,6 @@ placer_labels_sans_chevauchement_spirale <- function(x, y, labels, cex_vec, max_
     p_value = NA_real_,
     Classe_max = NA_character_,
     resid_max = NA_real_,
-    Significatif = "non",
     stringsAsFactors = FALSE
   )
 
@@ -200,7 +199,6 @@ placer_labels_sans_chevauchement_spirale <- function(x, y, labels, cex_vec, max_
     out$Classe_max[j] <- rownames(tab)[imax]
     out$resid_max[j] <- rj[imax]
 
-    if (is.finite(out$p_value[j]) && out$p_value[j] <= seuil_p) out$Significatif[j] <- "oui"
   }
 
   out
