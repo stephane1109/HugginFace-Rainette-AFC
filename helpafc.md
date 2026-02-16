@@ -47,6 +47,11 @@ Attention : le périmètre AFC peut déjà être réduit en amont :
 - sélection des termes significatifs (`p <= max_p`) si disponible,
 - plafond `max_termes = 400` lors de la construction de la table AFC.
 
+Est-ce que le CSV contient top_termes ?
+
+Non.
+Le CSV stats_termes.csv exporte rv$afc_obj$termes_stats complet (dans le périmètre de l’AFC calculée), sans appliquer top_termes
+
 ### 6) Différence importante
 
 - Les **positions AFC** viennent de `FactoMineR::CA`.
