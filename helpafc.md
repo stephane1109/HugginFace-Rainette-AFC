@@ -42,7 +42,7 @@ Attention : le périmètre AFC peut déjà être réduit en amont :
 - sélection des termes significatifs (`p <= max_p`) si disponible,
 - plafond `max_termes = 400` lors de la construction de la table AFC.
 
-### 6) Différence importante (éviter la confusion)
+### 6) Différence importante
 
 - Les **positions AFC** viennent de `FactoMineR::CA`.
 - Les **résidus/chi2** sont des statistiques d’association utiles pour l’interprétation.
