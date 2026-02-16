@@ -42,14 +42,14 @@ if (file.exists("help.md")) {
   }
 }
 
-source("nettoyage.R", encoding = "UTF-8")
-source("concordancier.R", encoding = "UTF-8")
-source("afc.R", encoding = "UTF-8")
-source("ui.R", encoding = "UTF-8")
+source("nettoyage.R", encoding = "UTF-8", local = TRUE)
+source("concordancier.R", encoding = "UTF-8", local = TRUE)
+source("afc.R", encoding = "UTF-8", local = TRUE)
+source("ui.R", encoding = "UTF-8", local = TRUE)
 
-source("R/utils_general.R", encoding = "UTF-8")
-source("R/utils_logging.R", encoding = "UTF-8")
-source("R/utils_text.R", encoding = "UTF-8")
+source("R/utils_general.R", encoding = "UTF-8", local = TRUE)
+source("R/utils_logging.R", encoding = "UTF-8", local = TRUE)
+source("R/utils_text.R", encoding = "UTF-8", local = TRUE)
 
 construire_segments_exemples_afc <- function(termes_stats, dfm_obj, corpus_obj, max_chars = 220) {
   if (is.null(termes_stats) || nrow(termes_stats) == 0 || is.null(dfm_obj) || is.null(corpus_obj)) return(termes_stats)
@@ -84,11 +84,11 @@ construire_segments_exemples_afc <- function(termes_stats, dfm_obj, corpus_obj, 
   termes_stats
 }
 
-source("R/chd_afc_pipeline.R", encoding = "UTF-8")
-source("R/nlp_language.R", encoding = "UTF-8")
-source("R/nlp_spacy.R", encoding = "UTF-8")
-source("R/server_outputs_status.R", encoding = "UTF-8")
-source("R/server_events_lancer.R", encoding = "UTF-8")
+source("R/chd_afc_pipeline.R", encoding = "UTF-8", local = TRUE)
+source("R/nlp_language.R", encoding = "UTF-8", local = TRUE)
+source("R/nlp_spacy.R", encoding = "UTF-8", local = TRUE)
+source("R/server_outputs_status.R", encoding = "UTF-8", local = TRUE)
+source("R/server_events_lancer.R", encoding = "UTF-8", local = TRUE)
 
 server <- function(input, output, session) {
 
