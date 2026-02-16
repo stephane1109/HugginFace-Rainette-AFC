@@ -222,8 +222,8 @@ generer_chd_explor_si_absente <- function(rv) {
         if (!is.finite(k_plot) || is.na(k_plot) || k_plot < 2) k_plot <- 2L
 
         args_plot <- list(
-          x = chd_obj,
-          dtm = dfm_obj,
+          chd_obj,
+          dfm_obj,
           k = k_plot,
           measure = "chi2",
           type = "bar",
