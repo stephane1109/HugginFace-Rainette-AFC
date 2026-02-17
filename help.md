@@ -81,5 +81,5 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 
 ### Mise à jour automatique de rainette
 
-- **AUTO_UPDATE_RAINETTE** : par défaut (`AUTO_UPDATE_RAINETTE=true`), l’application tente `install.packages("rainette")` au démarrage du conteneur avant de lancer Shiny (valeurs actives : `true`, `1`, `yes`).
+- **AUTO_UPDATE_RAINETTE** : par défaut (`AUTO_UPDATE_RAINETTE=true`), l’application tente `install.packages("rainette")` au démarrage du conteneur avant de lancer Shiny.
 - Pour désactiver ce comportement, définir `AUTO_UPDATE_RAINETTE=false`. La mise à jour automatique peut rallonger le temps de démarrage et dépend de la disponibilité réseau/CRAN.
