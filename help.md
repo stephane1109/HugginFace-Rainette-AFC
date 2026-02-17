@@ -67,7 +67,7 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 - **Nombre de termes** : nombre de termes affichés par classe dans la visualisation.
 - **Afficher les valeurs négatives** : inclut les termes négativement associés à une classe.
 
-### Mise à jour automatique de rainette (option)
+### Mise à jour automatique de rainette
 
 - **AUTO_UPDATE_RAINETTE** : par défaut (`AUTO_UPDATE_RAINETTE=true`), l’application tente `install.packages("rainette")` au démarrage du conteneur avant de lancer Shiny (valeurs actives : `true`, `1`, `yes`).
 - Pour désactiver ce comportement, définir `AUTO_UPDATE_RAINETTE=false`. La mise à jour automatique peut rallonger le temps de démarrage et dépend de la disponibilité réseau/CRAN.
