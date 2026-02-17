@@ -31,7 +31,7 @@ Sur Hugging Face Spaces, le stockage local de ce conteneur est temporaire : si l
 Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse.
 
 
-## Logique générale de l’application
+# Logique générale de l’application
 
 Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une matrice termes-documents (DTM), lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
@@ -63,10 +63,13 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 ### Filtrage Morphosyntaxique
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD.
 
-### Exploration
+### Paramètres SpaCy/NER
+- Activer NER (spaCy) => Détections des entités nommées (NER) par spaCy (ex : "Paris" = "LOC"). Le modele spaCy "md" est un peu léger... pour cette tâche.
+
+### Exploration "Explore_rainette"
 
 - **Classe** : sélection de la classe pour afficher les images et la table de statistiques associées.
-- **CHD (rainette_plot)** : affichage graphique de la CHD dans l’application.
+- **CHD** : affichage graphique de la CHD dans l’application.
 - **Type** : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe.
 - **Statistiques** : chi2, lr, frequency, selon le critère utilisé pour classer les termes.
 - Dans les exports CSV de type *keyness* (`measure = "chi2"`), les colonnes suivantes sont importantes :
