@@ -1,5 +1,6 @@
 ### codeandcortex.fr - Stéphane Meurisse - version beta 0.3 - 12-02-2026
 - <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
+- <a href="https://www.codeandcortex.fr/comprendre-chd-methode-reinert/" target="_blank" rel="noopener noreferrer">Comprendre la CHD</a>
 
 
 ### IRaMuTeQ
