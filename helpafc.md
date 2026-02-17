@@ -63,8 +63,6 @@ Le résidu ne sert pas pas à recalculer l’AFC.
  
 ### 6) Résidu positif / résidu négatif
 
-Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
-Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
-Résidu proche de 0 => présence “normale”, pas d’écart fort.
-
-
+- Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
+- Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
+- Résidu proche de 0 => présence “normale”, pas d’écart fort.
