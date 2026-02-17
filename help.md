@@ -58,7 +58,7 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 
 ### Lemmatisation (option)
 
-- **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est (beaucoup) plus efficace avec IRAMUTEQ.
+- **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est (beaucoup) plus efficace avec IRaMuTeQ.
 
 ### Filtrage Morphosyntaxique
 - **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex : NOUN, ADJ, VERB, PROPN, ADV...).
@@ -72,10 +72,10 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **CHD** : affichage graphique de la CHD dans l’application.
 - **Type** : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe.
 - **Statistiques** : chi2, lr, frequency, selon le critère utilisé pour classer les termes.
-- Dans les exports CSV de type *keyness* (`measure = "chi2"`), les colonnes suivantes sont importantes :
-  - **`n_target`** : nombre d’occurrences du terme dans le sous-corpus cible (la classe/cluster analysé).
-  - **`n_reference`** : nombre d’occurrences du même terme dans le corpus de référence (le reste des classes).
-  - **`chi2`** et **`p`** : test d’association entre cible et référence ; plus `chi2` est élevé et `p` petite, plus le terme est spécifiquement lié au sous-corpus cible.
+- Dans les exports CSV de type (`measure = "chi2"`), les colonnes suivantes sont importantes :
+  - **`n_target`** : nombre d’occurrences du terme dans la classe/cluster analysé.
+  - **`n_reference`** : nombre d’occurrences du même terme dans (tout) le corpus de référence (le reste des classes).
+  - **`chi2`** et **`p`** : test d’association entre cible et référence ; plus `chi2` est élevé et `p` petite, plus le terme est spécifiquement lié à la classe.
 - **Nombre de termes** : nombre de termes affichés par classe dans la visualisation.
 - **Afficher les valeurs négatives** : inclut les termes négativement associés à une classe.
 
