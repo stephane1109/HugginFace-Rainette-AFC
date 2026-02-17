@@ -1,8 +1,10 @@
 ### codeandcortex.fr - Stéphane Meurisse - version beta 0.3 - 12-02-2026
 - <a href="https://www.codeandcortex.fr" target="_blank" rel="noopener noreferrer">codeandcortex.fr</a>
 
+
 ### IRaMuTeQ
 IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une référence pour l’analyse textuelle en sciences humaines et sociales. Il met en œuvre la méthode de Reinert (CHD), l’AFC, ainsi que l’analyse de similitudes de Vergès, et propose de nombreux traitements complémentaires pour explorer la structure lexicale d’un corpus. Un atout est son dictionnaire de lemmes, plus précis et performant que beaucoup d’alternatives, ce qui améliore la stabilité des classes.
+
 
 ### Méthode Reinert - CHD
 
@@ -21,15 +23,17 @@ Rainette est un package R qui réalise une CHD selon la méthode Reinert.
 - <a href="https://cran.r-project.org/web/packages/rainette/vignettes/introduction_usage.html" target="_blank" rel="noopener noreferrer">Utilisation de rainette</a>
 - <a href="https://juba.r-universe.dev/builds" target="_blank" rel="noopener noreferrer">Builds r-universe</a>
 
+
 ### Pourquoi vos fichiers peuvent disparaître sur Hugging Face
 
 Sur Hugging Face Spaces, le stockage local de ce conteneur est temporaire : si le serveur redémarre, ou si la page est rechargée après une déconnexion, les fichiers générés pendant une analyse précédente peuvent ne plus être disponibles.
 
 Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse.
 
+
 ### Logique générale de l’application
 
-Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné, puis produit des images (nuages de mots et réseaux de cooccurrences). L’onglet d’exploration (rainette_explor) permet de visualiser la CHD.
+Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
 ### Paramètres de l’analyse
 
