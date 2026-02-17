@@ -61,7 +61,7 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 - **Lemmatisation** : si activée, le texte est lemmatisé avec Spacy... mais la lemmatisation est (beaucoup) plus efficace avec IRAMUTEQ.
 
 ### Filtrage Morphosyntaxique
-- **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex. NOUN, ADJ, VERB, PROPN, ADV). Si tu ne gardes que NOUN et ADJ, tu supprimes volontairement le reste (verbes, etc.), ce qui peut modifier la CHD.
+- **Tokens à conserver** : filtre les tokens conservés selon leur catégorie grammaticale (ex : NOUN, ADJ, VERB, PROPN, ADV...).
 
 ### Paramètres SpaCy/NER
 - Activer NER (spaCy) => Détections des entités nommées (NER) par spaCy (ex : "Paris" = "LOC"). Le modele spaCy "md" est un peu léger... pour cette tâche.
