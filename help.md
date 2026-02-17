@@ -33,7 +33,7 @@ Conseil : télécharge l’archive ZIP des exports juste après la fin de l’an
 
 ### Logique générale de l’application
 
-Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
+Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
 ### Paramètres de l’analyse
 
