@@ -5,9 +5,6 @@
 L’AFC classes × termes est calculée en 3 étapes :
 
 1. Construction de la table de contingence **Classes × Termes** depuis le DFM.
-   - On garde les segments avec classe non vide.
-   - On peut filtrer sur une liste de termes cibles.
-   - On limite éventuellement à `max_termes`.
 2. Exécution de l’AFC avec `FactoMineR::CA(tab, graph = FALSE)`.
 3. Récupération des coordonnées des classes (`rowcoord`) et des termes (`colcoord`) pour le tracé.
 
