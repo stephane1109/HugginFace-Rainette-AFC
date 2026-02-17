@@ -4,6 +4,7 @@
 
 ### IRaMuTeQ
 IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une référence pour l’analyse textuelle en sciences humaines et sociales. Il met en œuvre la méthode de Reinert (CHD), l’AFC, ainsi que l’analyse de similitudes de Vergès, et propose de nombreux traitements complémentaires pour explorer la structure lexicale d’un corpus. Un atout est son dictionnaire de lemmes, plus précis et performant que beaucoup d’alternatives, ce qui améliore la stabilité des classes.
+Le script detecte la coréhence choix du dictionnaire * votre corpus importé sur la base des stopsword
 
 
 ### Méthode Reinert - CHD
