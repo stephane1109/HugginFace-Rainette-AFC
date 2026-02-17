@@ -9,7 +9,7 @@ IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une réf
 La méthode de Reinert est une approche statistique d’analyse lexicale conçue pour dégager des « mondes lexicaux » dans un corpus. 
 L’idée est de repérer des ensembles de segments de texte qui partagent des vocabulaires proches. 
 
-La CHD, pour « classification hiérarchique descendante », est l’algorithme de partitionnement associé à cette méthode. 
+La CHD, pour "classification hiérarchique descendante", est l’algorithme de partitionnement associé à cette méthode. 
 Il procède par divisions successives : on prend l’ensemble des segments, puis on le coupe en deux groupes maximisant leur différenciation lexicale. 
 Ensuite, chaque groupe peut être à nouveau subdivisé, et ainsi de suite, jusqu’à obtenir un nombre de classes jugé pertinent ou une limite imposée par les paramètres.
 
@@ -35,7 +35,7 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit un DFM
 
 - **segment_size** : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs.
 - **k (nombre de classes)** : nombre de classes demandé pour la CHD.
-- Nombre minimal de termes par segment : **min_segment_size** : En effet, lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, nos segments peuvent donc varier en taille (entendue comme le nombre de termes encore présents). Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document (si possible) jusqu'à atteindre la taille minimale souhaitée.
+- Nombre minimal de termes par segment : **min_segment_size** : Lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, nos segments peuvent donc varier en taille (entendue comme le nombre de termes encore présents). Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document (si possible) jusqu'à atteindre la taille minimale souhaitée.
 - Effectif minimal pour scinder une classe : **min_split_members**. Nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification. Si cette contrainte est incompatible avec k, l'application réduit automatiquement k et l'indique dans les logs.
 - **dfm_trim min_docfreq** : fréquence minimale en nombre de segments pour conserver un terme dans le DFM. Plus haut enlève les termes rares. Par exemple si vous dfm_trim = 3 cela supprime de la matrice les termes apparaissant dans moins de 3 segments.
 - **max_p (p-value)** : seuil de p-value pour filtrer les termes mis en avant dans les statistiques et le surlignage HTML.
