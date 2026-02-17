@@ -4,7 +4,6 @@
 
 ### IRaMuTeQ
 IRaMuTeQ, développé par Pierre Ratinaud, est un logiciel libre devenu une référence pour l’analyse textuelle en sciences humaines et sociales. Il met en œuvre la méthode de Reinert (CHD), l’AFC, ainsi que l’analyse de similitudes de Vergès, et propose de nombreux traitements complémentaires pour explorer la structure lexicale d’un corpus. Un atout est son dictionnaire de lemmes, plus précis et performant que beaucoup d’alternatives, ce qui améliore la stabilité des classes.
-Le script detecte la coréhence choix du dictionnaire * votre corpus importé sur la base des stopsword
 
 
 ### Méthode Reinert - CHD
@@ -37,7 +36,7 @@ Conseil : télécharge l’archive ZIP des exports juste après la fin de l’an
 Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
 ### choix de la langue du dictionnaire spaCy
-Vous avez le choix entre Francais, Anglais, Espagnol... on pourrait en ajouter car ces dictionnaire sont la traductions de la librairie spaCy. Ici nous utilisons (pour le moment) le modèle medium (md). Il existe 4 tailles de modeles "sm", "md", "lg" et "trf" (basé sur la techno "transformer".
+Vous avez le choix entre Francais, Anglais, Espagnol... on pourrait en ajouter car ces dictionnaire sont la traductions de la librairie spaCy. Ici nous utilisons (pour le moment) le modèle medium (md). Il existe 4 tailles de modeles "sm", "md", "lg" et "trf" (basé sur la techno "transformer". Le script detecte la coréhence choix du dictionnaire * votre corpus importé sur la base des stopwords.
 
 ### Paramètres de l’analyse
 
