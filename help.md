@@ -37,7 +37,7 @@ Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une ma
 
 ### Choix de la langue du dictionnaire spaCy
 
-Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle « medium » (md). Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
+Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle "medium" (md). Il existe quatre tailles de modèles : "sm", "md", "lg" et "trf" (basé sur la technologie "transformer"). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
 
 ### Paramètres de l’analyse
 
