@@ -35,6 +35,9 @@ Conseil : télécharge l’archive ZIP des exports juste après la fin de l’an
 
 Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
+### choix de la langue du dictionnaire spaCy
+Vous avez le choix entre Francais, Anglais, Espagnol... on pourrait en ajouter car ces dictionnaire sont la traductions de la librairie spaCy. Ici nous utilisons (pour le moment) le modèle medium (md). Il existe 4 tailles de modeles "sm", "md", "lg" et "trf" (basé sur la techno "transformer".
+
 ### Paramètres de l’analyse
 
 - **segment_size** : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs.
