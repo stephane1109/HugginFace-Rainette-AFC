@@ -61,7 +61,7 @@ Le résidu ne sert pas pas à recalculer l’AFC.
 - Classe_max = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
 - resid_max = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe où l’écart relatif est le plus fort (sur/sous-représentation)
  
-### Résidu positif / résidu négatif
+### 6) Résidu positif / résidu négatif
 
 Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
 Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
