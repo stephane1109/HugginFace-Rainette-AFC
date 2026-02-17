@@ -31,12 +31,13 @@ Sur Hugging Face Spaces, le stockage local de ce conteneur est temporaire : si l
 Conseil : télécharge l’archive ZIP des exports juste après la fin de l’analyse.
 
 
-### Logique générale de l’application
+## Logique générale de l’application
 
-Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une DFM, lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
+Uploadez un fichier texte au format IRaMuTeQ. L’app segmente, construit une DFM (Document-Feature Matrix), lance la CHD avec rainette, calcule les statistiques, génère un HTML surligné (concordancier), puis produit la CHD, AFC, NER, nuages de mots et réseaux de cooccurrences. L’onglet d’exploration (Explore_rainette) permet de visualiser la CHD.
 
 ### choix de la langue du dictionnaire spaCy
-Vous avez le choix entre Francais, Anglais, Espagnol... on pourrait en ajouter car ces dictionnaire sont la traductions de la librairie spaCy. Ici nous utilisons (pour le moment) le modèle medium (md). Il existe 4 tailles de modeles "sm", "md", "lg" et "trf" (basé sur la techno "transformer". Le script detecte la coréhence choix du dictionnaire * votre corpus importé sur la base des stopwords.
+
+Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait en ajouter, car ces dictionnaires sont ceux fournis par la librairie spaCy. Ici, nous utilisons (pour le moment) le modèle « medium » (md). Il existe quatre tailles de modèles : « sm », « md », « lg » et « trf » (basé sur la technologie « transformer »). Le script détecte la cohérence entre le choix du dictionnaire et votre corpus importé, sur la base des stopwords.
 
 ### Paramètres de l’analyse
 
