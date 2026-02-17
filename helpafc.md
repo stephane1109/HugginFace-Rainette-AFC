@@ -45,7 +45,7 @@ Le rapport est-il tronqué à cause de `top_termes` ?
 - Les **positions AFC** viennent de `FactoMineR::CA`.
 - Les **résidus/chi2** sont des statistiques d’association utilisés pour l’interprétation.
 
-#### Comment le résidu de Pearson est calculé
+### Comment le résidu de Pearson est calculé
 
 Pour chaque mot et chaque classe :
 
@@ -60,7 +60,7 @@ Le résidu ne sert pas pas à recalculer l’AFC.
 - le code extrait, pour chaque mot, la classe où la surreprésentation relative est la plus forte (Classe_max_resid) et sa valeur (resid_max).
 - en parallèle, il garde aussi Classe_max comme classe la plus fréquente en brut (volume observé).
  
-#### Résidu positif / résidu négatif
+### Résidu positif / résidu négatif
 
 Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
 Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
