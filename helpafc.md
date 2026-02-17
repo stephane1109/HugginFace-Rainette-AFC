@@ -1,4 +1,4 @@
-## Aide AFC : calcul, affichage des termes et rôle de `top_termes`
+## Aide AFC : calcul, affichage des termes, rôle de `top_termes, calcul du résidu de Pearson`
 
 ### 1) Comment l’AFC est calculée dans le script
 
