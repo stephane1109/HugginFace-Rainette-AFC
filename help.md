@@ -44,10 +44,10 @@ Vous avez le choix entre le français, l’anglais, l’espagnol… On pourrait 
 
 - **segment_size** : taille des segments lors du découpage du corpus. Plus petit donne plus de segments, plus grand donne des segments plus longs.
 - **k (nombre de classes)** : nombre de classes demandé pour la CHD.
-- Nombre minimal de termes par segment : `**min_segment_size**` : Lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, les segments peuvent donc varier en taille. 
+- Nombre minimal de termes par segment : `min_segment_size` : Lors de la tokenisation et du calcul de la dtm, certaines formes (mots-outils, mots trop peu fréquents) ont été supprimées, les segments peuvent donc varier en taille. 
 Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont regroupés avec le segment suivant ou précédent du même document jusqu'à atteindre la taille minimale souhaitée.
 - Effectif minimal pour scinder une classe : **min_split_members**. Nombre minimal de documents pour qu'une classe soit scindée en deux à l'étape suivante de la classification.
-- Fréquence minimale des termes : `**dfm_trim min_docfreq**` : fréquence minimale en nombre de segments pour conserver un terme dans le DFM. Plus "haut" enlève les termes rares. Par exemple si vous `dfm_trim = 3` cela supprime de la matrice les termes apparaissant dans moins de 3 segments.
+- Fréquence minimale des termes : `dfm_trim min_docfreq` : fréquence minimale en nombre de segments pour conserver un terme dans le DFM. Plus "haut" enlève les termes rares. Par exemple si vous `dfm_trim = 3` cela supprime de la matrice les termes apparaissant dans moins de 3 segments.
 - **max_p (p-value)** : seuil de p-value pour filtrer les termes mis en avant dans les statistiques.
 - **top_n (wordcloud)** : nombre de termes affichés dans chaque nuage de mots.
 - **window (cooccurrences)** : taille de la fenêtre glissante pour calculer les cooccurrences.
