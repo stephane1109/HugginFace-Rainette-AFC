@@ -45,16 +45,14 @@ Pour chaque mot et chaque classe :
 - On calcule ensuite combien on aurait “normalement” attendu pour ce mot dans cette classe, si la répartition était neutre.
 - On compare les deux : réel vs attendu, et transforme cet écart en une valeur (le résidu).
 
-Cette valeur est calculée cellule par cellule dans la table Classes × Termes.
-
 Le résidu ne sert pas à recalculer l’AFC.
 
 - Le code extrait, pour chaque mot, la classe où la surreprésentation est la plus forte et sa valeur (`resid_max`).
-- Classe_max = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
-- resid_max = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe (sur/sous-représentation)
+- `Classe_max` = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
+- `resid_max` = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe (sur/sous-représentation)
  
 ### 7) Résidu positif / résidu négatif
 
-- Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
-- Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
+- Résidu positif => le mot est plus présent que prévu dans cette classe (**surreprésenté**).
+- Résidu négatif => le mot est moins présent que prévu dans cette classe (**sous-représenté**).
 - Résidu proche de 0 => présence “normale”, pas d’écart fort.
