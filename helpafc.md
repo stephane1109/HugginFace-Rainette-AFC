@@ -43,13 +43,13 @@ Pour chaque mot et chaque classe :
 
 - On regarde combien de fois le mot apparaît réellement dans cette classe.
 - On calcule ensuite combien on aurait “normalement” attendu pour ce mot dans cette classe, si la répartition était neutre.
-- On compare les deux : réel vs attendu, et transforme cet écart en une valeur standardisée (le résidu).
+- On compare les deux : réel vs attendu, et transforme cet écart en une valeur (le résidu).
 
 Cette valeur est calculée cellule par cellule dans la table Classes × Termes.
 
 Le résidu ne sert pas à recalculer l’AFC.
 
-- Le code extrait, pour chaque mot, la classe où la surreprésentation relative est la plus forte et sa valeur (`resid_max`).
+- Le code extrait, pour chaque mot, la classe où la surreprésentation est la plus forte et sa valeur (`resid_max`).
 - Classe_max = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
 - resid_max = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe (sur/sous-représentation)
  
