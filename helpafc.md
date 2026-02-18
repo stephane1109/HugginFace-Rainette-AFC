@@ -33,12 +33,7 @@ En amont, dans le pipeline serveur, on construit termes_signif avec `p <= input$
 
 ### 4) Le CSV contient-il seulement `top_termes` ?
 
-**Non.** Le CSV `stats_termes.csv` exporte la table `rv$afc_obj$termes_stats` (jeu complet de stats AFC disponible), sans appliquer la réduction `top_termes`.
-
-Le rapport est-il tronqué à cause de `top_termes` ?
-
-- **Oui pour le graphe AFC des termes** (`afc_termes.png`) : il affiche au plus `top_termes` mots.
-- **Non pour les CSV AFC** : `top_termes` n’y est pas appliqué.
+Le CSV `stats_termes.csv` exporte la table `rv$afc_obj$termes_stats` (jeu complet de stats AFC disponible), sans appliquer la réduction `top_termes`.
 
 ### 5) Note sur l'afc chi2/résidu de Pearson
 
