@@ -10,9 +10,7 @@ L’AFC classes × termes est calculée en 3 étapes :
 
 ### 2) Qu’est-ce que `top_termes` ?
 
-`top_termes` est **une limite d’affichage graphique** des mots sur le plan AFC.
-
-- Par défaut : `top_termes = 120`.
+`top_termes` est **une limite d’affichage graphique** des mots sur le plan AFC. Par défaut : `top_termes = 120`.
 
 ### 3) Sur quoi `top_termes` filtre ?
 
