@@ -29,7 +29,7 @@ Pourquoi top_termes est en fréquence et pas en p-value ?
 Parce que top_termes est une contrainte de lisibilité graphique.
 Le rôle de top_termes est de limiter le nombre de labels affichés dans `tracer_afc_classes_termes`, sinon le plot devient illisible (chevauchements). 
 Le code trie les termes par `frequency` puis coupe à top_termes.
-En amont, dans le pipeline serveur, on construit termes_signif avec `p <= input$max_p`, puis on passe ces termes à `executer_afc_classes`, `termes_cibles` = termes_significatifs). Donc la p-value réduit le périmètre des termes entrants AFC.
+En amont, dans le pipeline serveur, on construit termes_signif avec `p <= input$max_p`, puis on passe ces termes à `executer_afc_classes`, `termes_cibles` = termes_significatifs). Donc la p-value réduit le périmètre des termes de l'AFC.
 
 ### 4) Le CSV contient-il seulement `top_termes` ?
 
