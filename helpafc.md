@@ -37,7 +37,7 @@ Le CSV `stats_termes.csv` exporte la table `rv$afc_obj$termes_stats` (jeu comple
 - Les **positions AFC** viennent de `FactoMineR::CA`.
 - Les **résidus/chi2** sont des statistiques d’association utilisés pour l’interprétation.
 
-### Comment le résidu de Pearson est calculé
+### 6) Comment le résidu de Pearson est calculé
 
 Pour chaque mot et chaque classe :
 
@@ -53,7 +53,7 @@ Le résidu ne sert pas à recalculer l’AFC.
 - Classe_max = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
 - resid_max = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe (sur/sous-représentation)
  
-### 6) Résidu positif / résidu négatif
+### 7) Résidu positif / résidu négatif
 
 - Résidu positif => le mot est plus présent que prévu dans cette classe (surreprésenté).
 - Résidu négatif => le mot est moins présent que prévu dans cette classe (sous-représenté).
