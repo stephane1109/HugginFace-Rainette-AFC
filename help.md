@@ -70,7 +70,7 @@ Avec `min_segment_size = 10`, les segments comportant moins de 10 formes sont re
 ### Exploration "Explore_rainette"
 
 - **Classe** : sélection de la classe pour afficher les images et la table de statistiques associées.
-- **CHD** : affichage graphique de la CHD dans l’application.
+- **CHD** : affichage graphique de la CHD.
 - **Type** : bar (barres) ou cloud (nuage) pour l’affichage des termes par classe.
 - **Statistiques** : chi2, lr, frequency, selon le critère utilisé pour classer les termes.
 - Dans les exports CSV de type (`measure = "chi2"`), les colonnes suivantes sont importantes :
