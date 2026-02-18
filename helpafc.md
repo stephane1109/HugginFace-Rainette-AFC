@@ -51,7 +51,7 @@ Cette valeur est calculée cellule par cellule dans la table Classes × Termes.
 
 Le résidu ne sert pas à recalculer l’AFC.
 
-- le code extrait, pour chaque mot, la classe où la surreprésentation relative est la plus forte et sa valeur (resid_max).
+- Le code extrait, pour chaque mot, la classe où la surreprésentation relative est la plus forte et sa valeur (resid_max).
 - Classe_max = la classe où le mot apparaît le plus en quantité brute (le plus d’occurrences observées).
 - resid_max = la valeur qui mesure à quel point ce mot est plus (ou moins) présent que prévu dans la classe (sur/sous-représentation)
  
