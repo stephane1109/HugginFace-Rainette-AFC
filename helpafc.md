@@ -13,7 +13,6 @@ L’AFC classes × termes est calculée en 3 étapes :
 `top_termes` est **une limite d’affichage graphique** des mots sur le plan AFC.
 
 - Par défaut : `top_termes = 120`.
-- A développer (option) : Si un input `afc_top_termes` est fourni, il remplace 120
 
 ### 3) Sur quoi `top_termes` filtre ?
 
